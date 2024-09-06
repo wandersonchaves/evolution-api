@@ -1,4 +1,4 @@
-import { HttpStatus } from '../api/routes/index.router';
+import {HttpStatus} from '../api/routes/index.router'
 
 export class UnauthorizedException {
   constructor(...objectError: any[]) {
@@ -6,6 +6,6 @@ export class UnauthorizedException {
       status: HttpStatus.UNAUTHORIZED,
       error: 'Unauthorized',
       message: objectError.length > 0 ? objectError : 'Unauthorized',
-    };
+    }
   }
 }

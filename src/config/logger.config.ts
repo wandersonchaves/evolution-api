@@ -1,14 +1,15 @@
-import dayjs from 'dayjs';
-import fs from 'fs';
+import dayjs from 'dayjs'
+import fs from 'fs'
 
-import { configService, Log } from './env.config';
-const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+import {configService, Log} from './env.config'
+
+const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
 
 const formatDateLog = (timestamp: number) =>
   dayjs(timestamp)
     .toDate()
     .toString()
-    .replace(/\sGMT.+/, '');
+    .replace(/\sGMT.+/, '')
 
 enum Color {
   LOG = '\x1b[32m',
@@ -57,25 +58,27 @@ enum Background {
 }
 
 export class Logger {
-  private readonly configService = configService;
+  private readonly configService = configService
   constructor(private context = 'Logger') {}
 
-  private instance = null;
+  private instance = null
 
   public setContext(value: string) {
-    this.context = value;
+    this.context = value
   }
 
   public setInstance(value: string) {
-    this.instance = value;
+    this.instance = value
   }
 
   private console(value: any, type: Type) {
-    const types: Type[] = [];
+    const types: Type[] = []
 
-    this.configService.get<Log>('LOG').LEVEL.forEach((level) => types.push(Type[level]));
+    this.configService
+      .get<Log>('LOG')
+      .LEVEL.forEach((level) => types.push(Type[level]))
 
-    const typeValue = typeof value;
+    const typeValue = typeof value
     if (types.includes(type)) {
       if (configService.get<Log>('LOG').COLOR) {
         console.log(
@@ -102,8 +105,8 @@ export class Logger {
           Color[type],
           typeValue !== 'object' ? value : '',
           Command.RESET,
-        );
-        typeValue === 'object' ? console.log(/*Level.DARK,*/ value, '\n') : '';
+        )
+        typeValue === 'object' ? console.log(/*Level.DARK,*/ value, '\n') : ''
       } else {
         console.log(
           '[Evolution API]',
@@ -115,36 +118,36 @@ export class Logger {
           `[${this.context}]`,
           `[${typeValue}]`,
           value,
-        );
+        )
       }
     }
   }
 
   public log(value: any) {
-    this.console(value, Type.LOG);
+    this.console(value, Type.LOG)
   }
 
   public info(value: any) {
-    this.console(value, Type.INFO);
+    this.console(value, Type.INFO)
   }
 
   public warn(value: any) {
-    this.console(value, Type.WARN);
+    this.console(value, Type.WARN)
   }
 
   public error(value: any) {
-    this.console(value, Type.ERROR);
+    this.console(value, Type.ERROR)
   }
 
   public verbose(value: any) {
-    this.console(value, Type.VERBOSE);
+    this.console(value, Type.VERBOSE)
   }
 
   public debug(value: any) {
-    this.console(value, Type.DEBUG);
+    this.console(value, Type.DEBUG)
   }
 
   public dark(value: any) {
-    this.console(value, Type.DARK);
+    this.console(value, Type.DARK)
   }
 }

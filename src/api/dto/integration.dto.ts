@@ -1,5 +1,5 @@
 export class IntegrationDto {
-  integration: string;
-  number: string;
-  token: string;
+  integration: string
+  number: string
+  token: string
 }

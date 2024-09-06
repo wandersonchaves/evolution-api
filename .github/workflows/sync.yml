@@ -1,0 +1,48 @@
+name: Sync with upstream repository
+
+on:
+  schedule:
+    - cron: "0 0 * * 0" # Executa semanalmente, no domingo à meia-noite UTC
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure Git
+        run: |
+          git config user.name "Wanderson Chaves"
+          git config user.email "wandersonchavesbr14@gmail.com"
+
+      - name: Add upstream repository
+        run: |
+          git remote add upstream https://github.com/EvolutionAPI/evolution-api
+
+          git fetch upstream
+          git checkout main
+          git merge upstream/main --strategy-option theirs || true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run format:check and format:write
+        run: |
+          npm run format:check
+          npm run format:write
+
+      - name: Check for changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "Applied formatting after syncing with upstream"
+          fi
+
+      - name: Push changes
+        run: |
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

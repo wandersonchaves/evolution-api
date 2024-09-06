@@ -34,60 +34,75 @@
  * └──────────────────────────────────────────────────────────────────────────────┘
  */
 
-import { AuthenticationCreds, AuthenticationState, BufferJSON, initAuthCreds, proto, SignalDataTypeMap } from 'baileys';
-import { isNotEmpty } from 'class-validator';
+import {
+  AuthenticationCreds,
+  AuthenticationState,
+  BufferJSON,
+  initAuthCreds,
+  proto,
+  SignalDataTypeMap,
+} from 'baileys'
+import {isNotEmpty} from 'class-validator'
 
-import { ProviderFiles } from '../api/provider/sessions';
-import { Logger } from '../config/logger.config';
+import {ProviderFiles} from '../api/provider/sessions'
+import {Logger} from '../config/logger.config'
 
-export type AuthState = { state: AuthenticationState; saveCreds: () => Promise<void> };
+export type AuthState = {
+  state: AuthenticationState
+  saveCreds: () => Promise<void>
+}
 
 export class AuthStateProvider {
   constructor(private readonly providerFiles: ProviderFiles) {}
 
-  private readonly logger = new Logger(AuthStateProvider.name);
+  private readonly logger = new Logger(AuthStateProvider.name)
 
   public async authStateProvider(instance: string): Promise<AuthState> {
-    const [, error] = await this.providerFiles.create(instance);
+    const [, error] = await this.providerFiles.create(instance)
     if (error) {
-      this.logger.error(['Failed to create folder on file server', error?.message, error?.stack]);
-      return;
+      this.logger.error([
+        'Failed to create folder on file server',
+        error?.message,
+        error?.stack,
+      ])
+      return
     }
 
     const writeData = async (data: any, key: string): Promise<any> => {
-      const json = JSON.stringify(data, BufferJSON.replacer);
+      const json = JSON.stringify(data, BufferJSON.replacer)
       const [response, error] = await this.providerFiles.write(instance, key, {
         data: json,
-      });
+      })
       if (error) {
         // this.logger.error(['writeData', error?.message, error?.stack]);
-        return;
+        return
       }
-      return response;
-    };
+      return response
+    }
 
     const readData = async (key: string): Promise<any> => {
-      const [response, error] = await this.providerFiles.read(instance, key);
+      const [response, error] = await this.providerFiles.read(instance, key)
       if (error) {
         // this.logger.error(['readData', error?.message, error?.stack]);
-        return;
+        return
       }
       if (isNotEmpty(response?.data)) {
-        return JSON.parse(JSON.stringify(response.data), BufferJSON.reviver);
+        return JSON.parse(JSON.stringify(response.data), BufferJSON.reviver)
       }
-    };
+    }
 
     const removeData = async (key: string) => {
-      const [response, error] = await this.providerFiles.delete(instance, key);
+      const [response, error] = await this.providerFiles.delete(instance, key)
       if (error) {
         // this.logger.error(['removeData', error?.message, error?.stack]);
-        return;
+        return
       }
 
-      return response;
-    };
+      return response
+    }
 
-    const creds: AuthenticationCreds = (await readData('creds')) || initAuthCreds();
+    const creds: AuthenticationCreds =
+      (await readData('creds')) || initAuthCreds()
 
     return {
       state: {
@@ -96,37 +111,39 @@ export class AuthStateProvider {
           get: async (type, ids: string[]) => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            const data: { [_: string]: SignalDataTypeMap[type] } = {};
+            const data: {[_: string]: SignalDataTypeMap[type]} = {}
             await Promise.all(
               ids.map(async (id) => {
-                let value = await readData(`${type}-${id}`);
+                let value = await readData(`${type}-${id}`)
                 if (type === 'app-state-sync-key' && value) {
-                  value = proto.Message.AppStateSyncKeyData.fromObject(value);
+                  value = proto.Message.AppStateSyncKeyData.fromObject(value)
                 }
 
-                data[id] = value;
+                data[id] = value
               }),
-            );
+            )
 
-            return data;
+            return data
           },
           set: async (data: any) => {
-            const tasks: Promise<void>[] = [];
+            const tasks: Promise<void>[] = []
             for (const category in data) {
               for (const id in data[category]) {
-                const value = data[category][id];
-                const key = `${category}-${id}`;
-                tasks.push(value ? await writeData(value, key) : await removeData(key));
+                const value = data[category][id]
+                const key = `${category}-${id}`
+                tasks.push(
+                  value ? await writeData(value, key) : await removeData(key),
+                )
               }
             }
 
-            await Promise.all(tasks);
+            await Promise.all(tasks)
           },
         },
       },
       saveCreds: async () => {
-        return await writeData(creds, 'creds');
+        return await writeData(creds, 'creds')
       },
-    };
+    }
   }
 }

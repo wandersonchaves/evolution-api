@@ -81,11 +81,11 @@ body:
         - Outro
     validations:
       required: true
-  
+
   - type: textarea
     attributes:
       label: Outras expecificações do ambiente
-      placeholder: 'Hardware/Software: [ex: CPU, GPU]'
+      placeholder: "Hardware/Software: [ex: CPU, GPU]"
     validations:
       required: false
 
@@ -105,4 +105,3 @@ body:
       description: Inclua aqui qualquer outra informação que você ache que possa ser útil para entender ou resolver o bug.
     validations:
       required: false
-    

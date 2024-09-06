@@ -1008,7 +1008,7 @@ paths:
           description: Successful response
           content:
             application/json: {}
-            
+
   /chat/whatsappNumbers/{instanceName}:
     post:
       tags:
@@ -2123,8 +2123,8 @@ paths:
                 - labelId
                 - action
             example:
-              number: '553499999999'
-              labelId: '1'
+              number: "553499999999"
+              labelId: "1"
               action: add
       responses:
         "200":

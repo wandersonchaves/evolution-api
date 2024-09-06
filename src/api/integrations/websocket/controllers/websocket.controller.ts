@@ -1,23 +1,25 @@
-import { Logger } from '../../../../config/logger.config';
-import { InstanceDto } from '../../../dto/instance.dto';
-import { WebsocketDto } from '../dto/websocket.dto';
-import { WebsocketService } from '../services/websocket.service';
+import {Logger} from '../../../../config/logger.config'
+import {InstanceDto} from '../../../dto/instance.dto'
+import {WebsocketDto} from '../dto/websocket.dto'
+import {WebsocketService} from '../services/websocket.service'
 
-const logger = new Logger('WebsocketController');
+const logger = new Logger('WebsocketController')
 
 export class WebsocketController {
   constructor(private readonly websocketService: WebsocketService) {}
 
   public async createWebsocket(instance: InstanceDto, data: WebsocketDto) {
-    logger.verbose('requested createWebsocket from ' + instance.instanceName + ' instance');
+    logger.verbose(
+      'requested createWebsocket from ' + instance.instanceName + ' instance',
+    )
 
     if (!data.enabled) {
-      logger.verbose('websocket disabled');
-      data.events = [];
+      logger.verbose('websocket disabled')
+      data.events = []
     }
 
     if (data.events.length === 0) {
-      logger.verbose('websocket events empty');
+      logger.verbose('websocket events empty')
       data.events = [
         'APPLICATION_STARTUP',
         'QRCODE_UPDATED',
@@ -45,14 +47,16 @@ export class WebsocketController {
         'TYPEBOT_START',
         'TYPEBOT_CHANGE_STATUS',
         'CHAMA_AI_ACTION',
-      ];
+      ]
     }
 
-    return this.websocketService.create(instance, data);
+    return this.websocketService.create(instance, data)
   }
 
   public async findWebsocket(instance: InstanceDto) {
-    logger.verbose('requested findWebsocket from ' + instance.instanceName + ' instance');
-    return this.websocketService.find(instance);
+    logger.verbose(
+      'requested findWebsocket from ' + instance.instanceName + ' instance',
+    )
+    return this.websocketService.find(instance)
   }
 }

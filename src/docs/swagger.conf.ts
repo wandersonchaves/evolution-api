@@ -1,11 +1,11 @@
-import { Router } from 'express';
-import { join } from 'path';
-import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
+import {Router} from 'express'
+import {join} from 'path'
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yamljs'
 
-const document = YAML.load(join(process.cwd(), 'src', 'docs', 'swagger.yaml'));
+const document = YAML.load(join(process.cwd(), 'src', 'docs', 'swagger.yaml'))
 
-const router = Router();
+const router = Router()
 
 export const swaggerRouter = router.use('/docs', swaggerUi.serve).get(
   '/docs',
@@ -14,4 +14,4 @@ export const swaggerRouter = router.use('/docs', swaggerUi.serve).get(
     customSiteTitle: 'Evolution API',
     customfavIcon: '/images/logo.svg',
   }),
-);
+)

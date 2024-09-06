@@ -1,267 +1,279 @@
-import { isBooleanString } from 'class-validator';
-import { readFileSync } from 'fs';
-import { load } from 'js-yaml';
-import { join } from 'path';
+import {isBooleanString} from 'class-validator'
+import {readFileSync} from 'fs'
+import {load} from 'js-yaml'
+import {join} from 'path'
 
 export type HttpServer = {
-  TYPE: 'http' | 'https';
-  PORT: number;
-  URL: string;
-  DISABLE_DOCS: boolean;
-  DISABLE_MANAGER: boolean;
-};
+  TYPE: 'http' | 'https'
+  PORT: number
+  URL: string
+  DISABLE_DOCS: boolean
+  DISABLE_MANAGER: boolean
+}
 
-export type HttpMethods = 'POST' | 'GET' | 'PUT' | 'DELETE';
+export type HttpMethods = 'POST' | 'GET' | 'PUT' | 'DELETE'
 export type Cors = {
-  ORIGIN: string[];
-  METHODS: HttpMethods[];
-  CREDENTIALS: boolean;
-};
+  ORIGIN: string[]
+  METHODS: HttpMethods[]
+  CREDENTIALS: boolean
+}
 
-export type LogBaileys = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+export type LogBaileys = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
-export type LogLevel = 'ERROR' | 'WARN' | 'DEBUG' | 'INFO' | 'LOG' | 'VERBOSE' | 'DARK' | 'WEBHOOKS';
+export type LogLevel =
+  | 'ERROR'
+  | 'WARN'
+  | 'DEBUG'
+  | 'INFO'
+  | 'LOG'
+  | 'VERBOSE'
+  | 'DARK'
+  | 'WEBHOOKS'
 
 export type Log = {
-  LEVEL: LogLevel[];
-  COLOR: boolean;
-  BAILEYS: LogBaileys;
-};
+  LEVEL: LogLevel[]
+  COLOR: boolean
+  BAILEYS: LogBaileys
+}
 
 export type ProviderSession = {
-  ENABLED: boolean;
-  HOST: string;
-  PORT: string;
-  PREFIX: string;
-};
+  ENABLED: boolean
+  HOST: string
+  PORT: string
+  PREFIX: string
+}
 
 export type SaveData = {
-  INSTANCE: boolean;
-  NEW_MESSAGE: boolean;
-  MESSAGE_UPDATE: boolean;
-  CONTACTS: boolean;
-  CHATS: boolean;
-  LABELS: boolean;
-};
+  INSTANCE: boolean
+  NEW_MESSAGE: boolean
+  MESSAGE_UPDATE: boolean
+  CONTACTS: boolean
+  CHATS: boolean
+  LABELS: boolean
+}
 
 export type StoreConf = {
-  MESSAGES: boolean;
-  MESSAGE_UP: boolean;
-  CONTACTS: boolean;
-  CHATS: boolean;
-  LABELS: boolean;
-};
+  MESSAGES: boolean
+  MESSAGE_UP: boolean
+  CONTACTS: boolean
+  CHATS: boolean
+  LABELS: boolean
+}
 
 export type CleanStoreConf = {
-  CLEANING_INTERVAL: number;
-  MESSAGES: boolean;
-  MESSAGE_UP: boolean;
-  CONTACTS: boolean;
-  CHATS: boolean;
-};
+  CLEANING_INTERVAL: number
+  MESSAGES: boolean
+  MESSAGE_UP: boolean
+  CONTACTS: boolean
+  CHATS: boolean
+}
 
 export type DBConnection = {
-  URI: string;
-  DB_PREFIX_NAME: string;
-};
+  URI: string
+  DB_PREFIX_NAME: string
+}
 export type Database = {
-  CONNECTION: DBConnection;
-  ENABLED: boolean;
-  SAVE_DATA: SaveData;
-};
+  CONNECTION: DBConnection
+  ENABLED: boolean
+  SAVE_DATA: SaveData
+}
 
 export type EventsRabbitmq = {
-  APPLICATION_STARTUP: boolean;
-  INSTANCE_CREATE: boolean;
-  INSTANCE_DELETE: boolean;
-  QRCODE_UPDATED: boolean;
-  MESSAGES_SET: boolean;
-  MESSAGES_UPSERT: boolean;
-  MESSAGES_UPDATE: boolean;
-  MESSAGES_DELETE: boolean;
-  SEND_MESSAGE: boolean;
-  CONTACTS_SET: boolean;
-  CONTACTS_UPDATE: boolean;
-  CONTACTS_UPSERT: boolean;
-  PRESENCE_UPDATE: boolean;
-  CHATS_SET: boolean;
-  CHATS_UPDATE: boolean;
-  CHATS_DELETE: boolean;
-  CHATS_UPSERT: boolean;
-  CONNECTION_UPDATE: boolean;
-  LABELS_EDIT: boolean;
-  LABELS_ASSOCIATION: boolean;
-  GROUPS_UPSERT: boolean;
-  GROUP_UPDATE: boolean;
-  GROUP_PARTICIPANTS_UPDATE: boolean;
-  CALL: boolean;
-  NEW_JWT_TOKEN: boolean;
-  TYPEBOT_START: boolean;
-  TYPEBOT_CHANGE_STATUS: boolean;
-};
+  APPLICATION_STARTUP: boolean
+  INSTANCE_CREATE: boolean
+  INSTANCE_DELETE: boolean
+  QRCODE_UPDATED: boolean
+  MESSAGES_SET: boolean
+  MESSAGES_UPSERT: boolean
+  MESSAGES_UPDATE: boolean
+  MESSAGES_DELETE: boolean
+  SEND_MESSAGE: boolean
+  CONTACTS_SET: boolean
+  CONTACTS_UPDATE: boolean
+  CONTACTS_UPSERT: boolean
+  PRESENCE_UPDATE: boolean
+  CHATS_SET: boolean
+  CHATS_UPDATE: boolean
+  CHATS_DELETE: boolean
+  CHATS_UPSERT: boolean
+  CONNECTION_UPDATE: boolean
+  LABELS_EDIT: boolean
+  LABELS_ASSOCIATION: boolean
+  GROUPS_UPSERT: boolean
+  GROUP_UPDATE: boolean
+  GROUP_PARTICIPANTS_UPDATE: boolean
+  CALL: boolean
+  NEW_JWT_TOKEN: boolean
+  TYPEBOT_START: boolean
+  TYPEBOT_CHANGE_STATUS: boolean
+}
 
 export type Rabbitmq = {
-  ENABLED: boolean;
-  URI: string;
-  EXCHANGE_NAME: string;
-  GLOBAL_ENABLED: boolean;
-  EVENTS: EventsRabbitmq;
-};
+  ENABLED: boolean
+  URI: string
+  EXCHANGE_NAME: string
+  GLOBAL_ENABLED: boolean
+  EVENTS: EventsRabbitmq
+}
 
 export type Sqs = {
-  ENABLED: boolean;
-  ACCESS_KEY_ID: string;
-  SECRET_ACCESS_KEY: string;
-  ACCOUNT_ID: string;
-  REGION: string;
-};
+  ENABLED: boolean
+  ACCESS_KEY_ID: string
+  SECRET_ACCESS_KEY: string
+  ACCOUNT_ID: string
+  REGION: string
+}
 
 export type Websocket = {
-  ENABLED: boolean;
-  GLOBAL_EVENTS: boolean;
-};
+  ENABLED: boolean
+  GLOBAL_EVENTS: boolean
+}
 
 export type WaBusiness = {
-  TOKEN_WEBHOOK: string;
-  URL: string;
-  VERSION: string;
-  LANGUAGE: string;
-};
+  TOKEN_WEBHOOK: string
+  URL: string
+  VERSION: string
+  LANGUAGE: string
+}
 
 export type EventsWebhook = {
-  APPLICATION_STARTUP: boolean;
-  INSTANCE_CREATE: boolean;
-  INSTANCE_DELETE: boolean;
-  QRCODE_UPDATED: boolean;
-  MESSAGES_SET: boolean;
-  MESSAGES_UPSERT: boolean;
-  MESSAGES_UPDATE: boolean;
-  MESSAGES_DELETE: boolean;
-  SEND_MESSAGE: boolean;
-  CONTACTS_SET: boolean;
-  CONTACTS_UPDATE: boolean;
-  CONTACTS_UPSERT: boolean;
-  PRESENCE_UPDATE: boolean;
-  CHATS_SET: boolean;
-  CHATS_UPDATE: boolean;
-  CHATS_DELETE: boolean;
-  CHATS_UPSERT: boolean;
-  CONNECTION_UPDATE: boolean;
-  LABELS_EDIT: boolean;
-  LABELS_ASSOCIATION: boolean;
-  GROUPS_UPSERT: boolean;
-  GROUP_UPDATE: boolean;
-  GROUP_PARTICIPANTS_UPDATE: boolean;
-  CALL: boolean;
-  NEW_JWT_TOKEN: boolean;
-  TYPEBOT_START: boolean;
-  TYPEBOT_CHANGE_STATUS: boolean;
-  CHAMA_AI_ACTION: boolean;
-  ERRORS: boolean;
-  ERRORS_WEBHOOK: string;
-};
+  APPLICATION_STARTUP: boolean
+  INSTANCE_CREATE: boolean
+  INSTANCE_DELETE: boolean
+  QRCODE_UPDATED: boolean
+  MESSAGES_SET: boolean
+  MESSAGES_UPSERT: boolean
+  MESSAGES_UPDATE: boolean
+  MESSAGES_DELETE: boolean
+  SEND_MESSAGE: boolean
+  CONTACTS_SET: boolean
+  CONTACTS_UPDATE: boolean
+  CONTACTS_UPSERT: boolean
+  PRESENCE_UPDATE: boolean
+  CHATS_SET: boolean
+  CHATS_UPDATE: boolean
+  CHATS_DELETE: boolean
+  CHATS_UPSERT: boolean
+  CONNECTION_UPDATE: boolean
+  LABELS_EDIT: boolean
+  LABELS_ASSOCIATION: boolean
+  GROUPS_UPSERT: boolean
+  GROUP_UPDATE: boolean
+  GROUP_PARTICIPANTS_UPDATE: boolean
+  CALL: boolean
+  NEW_JWT_TOKEN: boolean
+  TYPEBOT_START: boolean
+  TYPEBOT_CHANGE_STATUS: boolean
+  CHAMA_AI_ACTION: boolean
+  ERRORS: boolean
+  ERRORS_WEBHOOK: string
+}
 
-export type ApiKey = { KEY: string };
-export type Jwt = { EXPIRIN_IN: number; SECRET: string };
+export type ApiKey = {KEY: string}
+export type Jwt = {EXPIRIN_IN: number; SECRET: string}
 
 export type Auth = {
-  API_KEY: ApiKey;
-  EXPOSE_IN_FETCH_INSTANCES: boolean;
-  JWT: Jwt;
-  TYPE: 'jwt' | 'apikey';
-};
+  API_KEY: ApiKey
+  EXPOSE_IN_FETCH_INSTANCES: boolean
+  JWT: Jwt
+  TYPE: 'jwt' | 'apikey'
+}
 
-export type DelInstance = number | boolean;
+export type DelInstance = number | boolean
 
-export type Language = string | 'en';
+export type Language = string | 'en'
 
 export type GlobalWebhook = {
-  URL: string;
-  ENABLED: boolean;
-  WEBHOOK_BY_EVENTS: boolean;
-};
+  URL: string
+  ENABLED: boolean
+  WEBHOOK_BY_EVENTS: boolean
+}
 export type CacheConfRedis = {
-  ENABLED: boolean;
-  URI: string;
-  PREFIX_KEY: string;
-  TTL: number;
-  SAVE_INSTANCES: boolean;
-};
+  ENABLED: boolean
+  URI: string
+  PREFIX_KEY: string
+  TTL: number
+  SAVE_INSTANCES: boolean
+}
 export type CacheConfLocal = {
-  ENABLED: boolean;
-  TTL: number;
-};
-export type SslConf = { PRIVKEY: string; FULLCHAIN: string };
-export type Webhook = { GLOBAL?: GlobalWebhook; EVENTS: EventsWebhook };
-export type ConfigSessionPhone = { CLIENT: string; NAME: string; VERSION: string };
-export type QrCode = { LIMIT: number; COLOR: string };
-export type Typebot = { API_VERSION: string; KEEP_OPEN: boolean };
+  ENABLED: boolean
+  TTL: number
+}
+export type SslConf = {PRIVKEY: string; FULLCHAIN: string}
+export type Webhook = {GLOBAL?: GlobalWebhook; EVENTS: EventsWebhook}
+export type ConfigSessionPhone = {CLIENT: string; NAME: string; VERSION: string}
+export type QrCode = {LIMIT: number; COLOR: string}
+export type Typebot = {API_VERSION: string; KEEP_OPEN: boolean}
 export type Chatwoot = {
-  MESSAGE_DELETE: boolean;
-  MESSAGE_READ: boolean;
+  MESSAGE_DELETE: boolean
+  MESSAGE_READ: boolean
   IMPORT: {
     DATABASE: {
       CONNECTION: {
-        URI: string;
-      };
-    };
-    PLACEHOLDER_MEDIA_MESSAGE: boolean;
-  };
-};
-
-export type CacheConf = { REDIS: CacheConfRedis; LOCAL: CacheConfLocal };
-export type Production = boolean;
-
-export interface Env {
-  SERVER: HttpServer;
-  CORS: Cors;
-  SSL_CONF: SslConf;
-  PROVIDER: ProviderSession;
-  STORE: StoreConf;
-  CLEAN_STORE: CleanStoreConf;
-  DATABASE: Database;
-  RABBITMQ: Rabbitmq;
-  SQS: Sqs;
-  WEBSOCKET: Websocket;
-  WA_BUSINESS: WaBusiness;
-  LOG: Log;
-  DEL_INSTANCE: DelInstance;
-  DEL_TEMP_INSTANCES: boolean;
-  LANGUAGE: Language;
-  WEBHOOK: Webhook;
-  CONFIG_SESSION_PHONE: ConfigSessionPhone;
-  QRCODE: QrCode;
-  TYPEBOT: Typebot;
-  CHATWOOT: Chatwoot;
-  CACHE: CacheConf;
-  AUTHENTICATION: Auth;
-  PRODUCTION?: Production;
+        URI: string
+      }
+    }
+    PLACEHOLDER_MEDIA_MESSAGE: boolean
+  }
 }
 
-export type Key = keyof Env;
+export type CacheConf = {REDIS: CacheConfRedis; LOCAL: CacheConfLocal}
+export type Production = boolean
+
+export interface Env {
+  SERVER: HttpServer
+  CORS: Cors
+  SSL_CONF: SslConf
+  PROVIDER: ProviderSession
+  STORE: StoreConf
+  CLEAN_STORE: CleanStoreConf
+  DATABASE: Database
+  RABBITMQ: Rabbitmq
+  SQS: Sqs
+  WEBSOCKET: Websocket
+  WA_BUSINESS: WaBusiness
+  LOG: Log
+  DEL_INSTANCE: DelInstance
+  DEL_TEMP_INSTANCES: boolean
+  LANGUAGE: Language
+  WEBHOOK: Webhook
+  CONFIG_SESSION_PHONE: ConfigSessionPhone
+  QRCODE: QrCode
+  TYPEBOT: Typebot
+  CHATWOOT: Chatwoot
+  CACHE: CacheConf
+  AUTHENTICATION: Auth
+  PRODUCTION?: Production
+}
+
+export type Key = keyof Env
 
 export class ConfigService {
   constructor() {
-    this.loadEnv();
+    this.loadEnv()
   }
 
-  private env: Env;
+  private env: Env
 
   public get<T = any>(key: Key) {
-    return this.env[key] as T;
+    return this.env[key] as T
   }
 
   private loadEnv() {
-    this.env = !(process.env?.DOCKER_ENV === 'true') ? this.envYaml() : this.envProcess();
-    this.env.PRODUCTION = process.env?.NODE_ENV === 'PROD';
+    this.env = !(process.env?.DOCKER_ENV === 'true')
+      ? this.envYaml()
+      : this.envProcess()
+    this.env.PRODUCTION = process.env?.NODE_ENV === 'PROD'
     if (process.env?.DOCKER_ENV === 'true') {
-      this.env.SERVER.TYPE = process.env.SERVER_TYPE as 'http' | 'http';
-      this.env.SERVER.PORT = Number.parseInt(process.env.SERVER_PORT) || 8080;
+      this.env.SERVER.TYPE = process.env.SERVER_TYPE as 'http' | 'http'
+      this.env.SERVER.PORT = Number.parseInt(process.env.SERVER_PORT) || 8080
     }
   }
 
   private envYaml(): Env {
-    return load(readFileSync(join(process.cwd(), 'src', 'env.yml'), { encoding: 'utf-8' })) as Env;
+    return load(
+      readFileSync(join(process.cwd(), 'src', 'env.yml'), {encoding: 'utf-8'}),
+    ) as Env
   }
 
   private envProcess(): Env {
@@ -275,7 +287,12 @@ export class ConfigService {
       },
       CORS: {
         ORIGIN: process.env.CORS_ORIGIN.split(',') || ['*'],
-        METHODS: (process.env.CORS_METHODS.split(',') as HttpMethods[]) || ['POST', 'GET', 'PUT', 'DELETE'],
+        METHODS: (process.env.CORS_METHODS.split(',') as HttpMethods[]) || [
+          'POST',
+          'GET',
+          'PUT',
+          'DELETE',
+        ],
         CREDENTIALS: process.env?.CORS_CREDENTIALS === 'true',
       },
       SSL_CONF: {
@@ -296,7 +313,9 @@ export class ConfigService {
         LABELS: process.env?.STORE_LABELS === 'true',
       },
       CLEAN_STORE: {
-        CLEANING_INTERVAL: Number.isInteger(process.env?.CLEAN_STORE_CLEANING_INTERVAL)
+        CLEANING_INTERVAL: Number.isInteger(
+          process.env?.CLEAN_STORE_CLEANING_INTERVAL,
+        )
           ? Number.parseInt(process.env.CLEAN_STORE_CLEANING_INTERVAL)
           : 7200,
         MESSAGES: process.env?.CLEAN_STORE_MESSAGES === 'true',
@@ -307,7 +326,8 @@ export class ConfigService {
       DATABASE: {
         CONNECTION: {
           URI: process.env.DATABASE_CONNECTION_URI || '',
-          DB_PREFIX_NAME: process.env.DATABASE_CONNECTION_DB_PREFIX_NAME || 'evolution',
+          DB_PREFIX_NAME:
+            process.env.DATABASE_CONNECTION_DB_PREFIX_NAME || 'evolution',
         },
         ENABLED: process.env?.DATABASE_ENABLED === 'true',
         SAVE_DATA: {
@@ -322,36 +342,51 @@ export class ConfigService {
       RABBITMQ: {
         ENABLED: process.env?.RABBITMQ_ENABLED === 'true',
         GLOBAL_ENABLED: process.env?.RABBITMQ_GLOBAL_ENABLED === 'true',
-        EXCHANGE_NAME: process.env?.RABBITMQ_EXCHANGE_NAME || 'evolution_exchange',
+        EXCHANGE_NAME:
+          process.env?.RABBITMQ_EXCHANGE_NAME || 'evolution_exchange',
         URI: process.env.RABBITMQ_URI || '',
         EVENTS: {
-          APPLICATION_STARTUP: process.env?.RABBITMQ_EVENTS_APPLICATION_STARTUP === 'true',
-          INSTANCE_CREATE: process.env?.RABBITMQ_EVENTS_INSTANCE_CREATE === 'true',
-          INSTANCE_DELETE: process.env?.RABBITMQ_EVENTS_INSTANCE_DELETE === 'true',
-          QRCODE_UPDATED: process.env?.RABBITMQ_EVENTS_QRCODE_UPDATED === 'true',
+          APPLICATION_STARTUP:
+            process.env?.RABBITMQ_EVENTS_APPLICATION_STARTUP === 'true',
+          INSTANCE_CREATE:
+            process.env?.RABBITMQ_EVENTS_INSTANCE_CREATE === 'true',
+          INSTANCE_DELETE:
+            process.env?.RABBITMQ_EVENTS_INSTANCE_DELETE === 'true',
+          QRCODE_UPDATED:
+            process.env?.RABBITMQ_EVENTS_QRCODE_UPDATED === 'true',
           MESSAGES_SET: process.env?.RABBITMQ_EVENTS_MESSAGES_SET === 'true',
-          MESSAGES_UPSERT: process.env?.RABBITMQ_EVENTS_MESSAGES_UPSERT === 'true',
-          MESSAGES_UPDATE: process.env?.RABBITMQ_EVENTS_MESSAGES_UPDATE === 'true',
-          MESSAGES_DELETE: process.env?.RABBITMQ_EVENTS_MESSAGES_DELETE === 'true',
+          MESSAGES_UPSERT:
+            process.env?.RABBITMQ_EVENTS_MESSAGES_UPSERT === 'true',
+          MESSAGES_UPDATE:
+            process.env?.RABBITMQ_EVENTS_MESSAGES_UPDATE === 'true',
+          MESSAGES_DELETE:
+            process.env?.RABBITMQ_EVENTS_MESSAGES_DELETE === 'true',
           SEND_MESSAGE: process.env?.RABBITMQ_EVENTS_SEND_MESSAGE === 'true',
           CONTACTS_SET: process.env?.RABBITMQ_EVENTS_CONTACTS_SET === 'true',
-          CONTACTS_UPDATE: process.env?.RABBITMQ_EVENTS_CONTACTS_UPDATE === 'true',
-          CONTACTS_UPSERT: process.env?.RABBITMQ_EVENTS_CONTACTS_UPSERT === 'true',
-          PRESENCE_UPDATE: process.env?.RABBITMQ_EVENTS_PRESENCE_UPDATE === 'true',
+          CONTACTS_UPDATE:
+            process.env?.RABBITMQ_EVENTS_CONTACTS_UPDATE === 'true',
+          CONTACTS_UPSERT:
+            process.env?.RABBITMQ_EVENTS_CONTACTS_UPSERT === 'true',
+          PRESENCE_UPDATE:
+            process.env?.RABBITMQ_EVENTS_PRESENCE_UPDATE === 'true',
           CHATS_SET: process.env?.RABBITMQ_EVENTS_CHATS_SET === 'true',
           CHATS_UPDATE: process.env?.RABBITMQ_EVENTS_CHATS_UPDATE === 'true',
           CHATS_UPSERT: process.env?.RABBITMQ_EVENTS_CHATS_UPSERT === 'true',
           CHATS_DELETE: process.env?.RABBITMQ_EVENTS_CHATS_DELETE === 'true',
-          CONNECTION_UPDATE: process.env?.RABBITMQ_EVENTS_CONNECTION_UPDATE === 'true',
+          CONNECTION_UPDATE:
+            process.env?.RABBITMQ_EVENTS_CONNECTION_UPDATE === 'true',
           LABELS_EDIT: process.env?.RABBITMQ_EVENTS_LABELS_EDIT === 'true',
-          LABELS_ASSOCIATION: process.env?.RABBITMQ_EVENTS_LABELS_ASSOCIATION === 'true',
+          LABELS_ASSOCIATION:
+            process.env?.RABBITMQ_EVENTS_LABELS_ASSOCIATION === 'true',
           GROUPS_UPSERT: process.env?.RABBITMQ_EVENTS_GROUPS_UPSERT === 'true',
           GROUP_UPDATE: process.env?.RABBITMQ_EVENTS_GROUPS_UPDATE === 'true',
-          GROUP_PARTICIPANTS_UPDATE: process.env?.RABBITMQ_EVENTS_GROUP_PARTICIPANTS_UPDATE === 'true',
+          GROUP_PARTICIPANTS_UPDATE:
+            process.env?.RABBITMQ_EVENTS_GROUP_PARTICIPANTS_UPDATE === 'true',
           CALL: process.env?.RABBITMQ_EVENTS_CALL === 'true',
           NEW_JWT_TOKEN: process.env?.RABBITMQ_EVENTS_NEW_JWT_TOKEN === 'true',
           TYPEBOT_START: process.env?.RABBITMQ_EVENTS_TYPEBOT_START === 'true',
-          TYPEBOT_CHANGE_STATUS: process.env?.RABBITMQ_EVENTS_TYPEBOT_CHANGE_STATUS === 'true',
+          TYPEBOT_CHANGE_STATUS:
+            process.env?.RABBITMQ_EVENTS_TYPEBOT_CHANGE_STATUS === 'true',
         },
       },
       SQS: {
@@ -396,37 +431,52 @@ export class ConfigService {
         GLOBAL: {
           URL: process.env?.WEBHOOK_GLOBAL_URL || '',
           ENABLED: process.env?.WEBHOOK_GLOBAL_ENABLED === 'true',
-          WEBHOOK_BY_EVENTS: process.env?.WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS === 'true',
+          WEBHOOK_BY_EVENTS:
+            process.env?.WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS === 'true',
         },
         EVENTS: {
-          APPLICATION_STARTUP: process.env?.WEBHOOK_EVENTS_APPLICATION_STARTUP === 'true',
-          INSTANCE_CREATE: process.env?.WEBHOOK_EVENTS_INSTANCE_CREATE === 'true',
-          INSTANCE_DELETE: process.env?.WEBHOOK_EVENTS_INSTANCE_DELETE === 'true',
+          APPLICATION_STARTUP:
+            process.env?.WEBHOOK_EVENTS_APPLICATION_STARTUP === 'true',
+          INSTANCE_CREATE:
+            process.env?.WEBHOOK_EVENTS_INSTANCE_CREATE === 'true',
+          INSTANCE_DELETE:
+            process.env?.WEBHOOK_EVENTS_INSTANCE_DELETE === 'true',
           QRCODE_UPDATED: process.env?.WEBHOOK_EVENTS_QRCODE_UPDATED === 'true',
           MESSAGES_SET: process.env?.WEBHOOK_EVENTS_MESSAGES_SET === 'true',
-          MESSAGES_UPSERT: process.env?.WEBHOOK_EVENTS_MESSAGES_UPSERT === 'true',
-          MESSAGES_UPDATE: process.env?.WEBHOOK_EVENTS_MESSAGES_UPDATE === 'true',
-          MESSAGES_DELETE: process.env?.WEBHOOK_EVENTS_MESSAGES_DELETE === 'true',
+          MESSAGES_UPSERT:
+            process.env?.WEBHOOK_EVENTS_MESSAGES_UPSERT === 'true',
+          MESSAGES_UPDATE:
+            process.env?.WEBHOOK_EVENTS_MESSAGES_UPDATE === 'true',
+          MESSAGES_DELETE:
+            process.env?.WEBHOOK_EVENTS_MESSAGES_DELETE === 'true',
           SEND_MESSAGE: process.env?.WEBHOOK_EVENTS_SEND_MESSAGE === 'true',
           CONTACTS_SET: process.env?.WEBHOOK_EVENTS_CONTACTS_SET === 'true',
-          CONTACTS_UPDATE: process.env?.WEBHOOK_EVENTS_CONTACTS_UPDATE === 'true',
-          CONTACTS_UPSERT: process.env?.WEBHOOK_EVENTS_CONTACTS_UPSERT === 'true',
-          PRESENCE_UPDATE: process.env?.WEBHOOK_EVENTS_PRESENCE_UPDATE === 'true',
+          CONTACTS_UPDATE:
+            process.env?.WEBHOOK_EVENTS_CONTACTS_UPDATE === 'true',
+          CONTACTS_UPSERT:
+            process.env?.WEBHOOK_EVENTS_CONTACTS_UPSERT === 'true',
+          PRESENCE_UPDATE:
+            process.env?.WEBHOOK_EVENTS_PRESENCE_UPDATE === 'true',
           CHATS_SET: process.env?.WEBHOOK_EVENTS_CHATS_SET === 'true',
           CHATS_UPDATE: process.env?.WEBHOOK_EVENTS_CHATS_UPDATE === 'true',
           CHATS_UPSERT: process.env?.WEBHOOK_EVENTS_CHATS_UPSERT === 'true',
           CHATS_DELETE: process.env?.WEBHOOK_EVENTS_CHATS_DELETE === 'true',
-          CONNECTION_UPDATE: process.env?.WEBHOOK_EVENTS_CONNECTION_UPDATE === 'true',
+          CONNECTION_UPDATE:
+            process.env?.WEBHOOK_EVENTS_CONNECTION_UPDATE === 'true',
           LABELS_EDIT: process.env?.WEBHOOK_EVENTS_LABELS_EDIT === 'true',
-          LABELS_ASSOCIATION: process.env?.WEBHOOK_EVENTS_LABELS_ASSOCIATION === 'true',
+          LABELS_ASSOCIATION:
+            process.env?.WEBHOOK_EVENTS_LABELS_ASSOCIATION === 'true',
           GROUPS_UPSERT: process.env?.WEBHOOK_EVENTS_GROUPS_UPSERT === 'true',
           GROUP_UPDATE: process.env?.WEBHOOK_EVENTS_GROUPS_UPDATE === 'true',
-          GROUP_PARTICIPANTS_UPDATE: process.env?.WEBHOOK_EVENTS_GROUP_PARTICIPANTS_UPDATE === 'true',
+          GROUP_PARTICIPANTS_UPDATE:
+            process.env?.WEBHOOK_EVENTS_GROUP_PARTICIPANTS_UPDATE === 'true',
           CALL: process.env?.WEBHOOK_EVENTS_CALL === 'true',
           NEW_JWT_TOKEN: process.env?.WEBHOOK_EVENTS_NEW_JWT_TOKEN === 'true',
           TYPEBOT_START: process.env?.WEBHOOK_EVENTS_TYPEBOT_START === 'true',
-          TYPEBOT_CHANGE_STATUS: process.env?.WEBHOOK_EVENTS_TYPEBOT_CHANGE_STATUS === 'true',
-          CHAMA_AI_ACTION: process.env?.WEBHOOK_EVENTS_CHAMA_AI_ACTION === 'true',
+          TYPEBOT_CHANGE_STATUS:
+            process.env?.WEBHOOK_EVENTS_TYPEBOT_CHANGE_STATUS === 'true',
+          CHAMA_AI_ACTION:
+            process.env?.WEBHOOK_EVENTS_CHAMA_AI_ACTION === 'true',
           ERRORS: process.env?.WEBHOOK_EVENTS_ERRORS === 'true',
           ERRORS_WEBHOOK: process.env?.WEBHOOK_EVENTS_ERRORS_WEBHOOK || '',
         },
@@ -453,7 +503,8 @@ export class ConfigService {
               URI: process.env.CHATWOOT_IMPORT_DATABASE_CONNECTION_URI || '',
             },
           },
-          PLACEHOLDER_MEDIA_MESSAGE: process.env?.CHATWOOT_IMPORT_PLACEHOLDER_MEDIA_MESSAGE === 'true',
+          PLACEHOLDER_MEDIA_MESSAGE:
+            process.env?.CHATWOOT_IMPORT_PLACEHOLDER_MEDIA_MESSAGE === 'true',
         },
       },
       CACHE: {
@@ -474,16 +525,20 @@ export class ConfigService {
         API_KEY: {
           KEY: process.env.AUTHENTICATION_API_KEY || 'BQYHJGJHJ',
         },
-        EXPOSE_IN_FETCH_INSTANCES: process.env?.AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES === 'true',
+        EXPOSE_IN_FETCH_INSTANCES:
+          process.env?.AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES === 'true',
         JWT: {
-          EXPIRIN_IN: Number.isInteger(process.env?.AUTHENTICATION_JWT_EXPIRIN_IN)
+          EXPIRIN_IN: Number.isInteger(
+            process.env?.AUTHENTICATION_JWT_EXPIRIN_IN,
+          )
             ? Number.parseInt(process.env.AUTHENTICATION_JWT_EXPIRIN_IN)
             : 3600,
-          SECRET: process.env.AUTHENTICATION_JWT_SECRET || 'L=0YWt]b2w[WF>#>:&E`',
+          SECRET:
+            process.env.AUTHENTICATION_JWT_SECRET || 'L=0YWt]b2w[WF>#>:&E`',
         },
       },
-    };
+    }
   }
 }
 
-export const configService = new ConfigService();
+export const configService = new ConfigService()

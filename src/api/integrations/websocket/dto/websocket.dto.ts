@@ -1,4 +1,4 @@
 export class WebsocketDto {
-  enabled: boolean;
-  events?: string[];
+  enabled: boolean
+  events?: string[]
 }

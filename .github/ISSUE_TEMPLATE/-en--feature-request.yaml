@@ -10,7 +10,7 @@ body:
     id: terms
     attributes:
       label: Welcome!
-      description: '**DO NOT OPEN FOR GENERAL SUPPORT QUESTIONS.**'
+      description: "**DO NOT OPEN FOR GENERAL SUPPORT QUESTIONS.**"
 
       options:
         - label: Yes, I have searched for similar requests on [GitHub](https://github.com/code-chat-br/whatsapp-api/issues) and found none.
@@ -47,7 +47,7 @@ body:
       placeholder: Detailed description
     validations:
       required: true
-  
+
   - type: textarea
     attributes:
       label: Usage Examples
@@ -65,7 +65,7 @@ body:
         Should it be inserted directly into the code?
         Should it be built as a different application that acts as an extension of the API? 
         For example: a `worker`?
-        
+
         Discuss how this new functionality could impact other parts of the project, if applicable.
 
         ---

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-namespace */
-import { AuthenticationState, WAConnectionState } from 'baileys';
+import {AuthenticationState, WAConnectionState} from 'baileys'
 
 export enum Events {
   APPLICATION_STARTUP = 'application.startup',
@@ -36,134 +36,147 @@ export enum Events {
 
 export declare namespace wa {
   export type QrCode = {
-    count?: number;
-    pairingCode?: string;
-    base64?: string;
-    code?: string;
-  };
+    count?: number
+    pairingCode?: string
+    base64?: string
+    code?: string
+  }
   export type Instance = {
-    qrcode?: QrCode;
-    pairingCode?: string;
-    authState?: { state: AuthenticationState; saveCreds: () => void };
-    name?: string;
-    wuid?: string;
-    profileName?: string;
-    profilePictureUrl?: string;
-  };
+    qrcode?: QrCode
+    pairingCode?: string
+    authState?: {state: AuthenticationState; saveCreds: () => void}
+    name?: string
+    wuid?: string
+    profileName?: string
+    profilePictureUrl?: string
+  }
 
   export type LocalWebHook = {
-    enabled?: boolean;
-    url?: string;
-    events?: string[];
-    webhook_by_events?: boolean;
-    webhook_base64?: boolean;
-  };
+    enabled?: boolean
+    url?: string
+    events?: string[]
+    webhook_by_events?: boolean
+    webhook_base64?: boolean
+  }
 
   export type LocalChatwoot = {
-    enabled?: boolean;
-    account_id?: string;
-    token?: string;
-    url?: string;
-    name_inbox?: string;
-    sign_msg?: boolean;
-    number?: string;
-    reopen_conversation?: boolean;
-    conversation_pending?: boolean;
-    merge_brazil_contacts?: boolean;
-    import_contacts?: boolean;
-    import_messages?: boolean;
-    days_limit_import_messages?: number;
-  };
+    enabled?: boolean
+    account_id?: string
+    token?: string
+    url?: string
+    name_inbox?: string
+    sign_msg?: boolean
+    number?: string
+    reopen_conversation?: boolean
+    conversation_pending?: boolean
+    merge_brazil_contacts?: boolean
+    import_contacts?: boolean
+    import_messages?: boolean
+    days_limit_import_messages?: number
+  }
 
   export type LocalSettings = {
-    reject_call?: boolean;
-    msg_call?: string;
-    groups_ignore?: boolean;
-    always_online?: boolean;
-    read_messages?: boolean;
-    read_status?: boolean;
-    sync_full_history?: boolean;
-  };
+    reject_call?: boolean
+    msg_call?: string
+    groups_ignore?: boolean
+    always_online?: boolean
+    read_messages?: boolean
+    read_status?: boolean
+    sync_full_history?: boolean
+  }
 
   export type LocalWebsocket = {
-    enabled?: boolean;
-    events?: string[];
-  };
+    enabled?: boolean
+    events?: string[]
+  }
 
   export type LocalRabbitmq = {
-    enabled?: boolean;
-    events?: string[];
-  };
+    enabled?: boolean
+    events?: string[]
+  }
 
   export type LocalSqs = {
-    enabled?: boolean;
-    events?: string[];
-  };
+    enabled?: boolean
+    events?: string[]
+  }
 
   type Session = {
-    remoteJid?: string;
-    sessionId?: string;
-    createdAt?: number;
-  };
+    remoteJid?: string
+    sessionId?: string
+    createdAt?: number
+  }
 
   export type LocalTypebot = {
-    enabled?: boolean;
-    url?: string;
-    typebot?: string;
-    expire?: number;
-    keyword_finish?: string;
-    delay_message?: number;
-    unknown_message?: string;
-    listening_from_me?: boolean;
-    sessions?: Session[];
-  };
+    enabled?: boolean
+    url?: string
+    typebot?: string
+    expire?: number
+    keyword_finish?: string
+    delay_message?: number
+    unknown_message?: string
+    listening_from_me?: boolean
+    sessions?: Session[]
+  }
 
   type Proxy = {
-    host?: string;
-    port?: string;
-    protocol?: string;
-    username?: string;
-    password?: string;
-  };
+    host?: string
+    port?: string
+    protocol?: string
+    username?: string
+    password?: string
+  }
 
   export type LocalProxy = {
-    enabled?: boolean;
-    proxy?: Proxy;
-  };
+    enabled?: boolean
+    proxy?: Proxy
+  }
 
   export type LocalChamaai = {
-    enabled?: boolean;
-    url?: string;
-    token?: string;
-    waNumber?: string;
-    answerByAudio?: boolean;
-  };
+    enabled?: boolean
+    url?: string
+    token?: string
+    waNumber?: string
+    answerByAudio?: boolean
+  }
 
   export type LocalIntegration = {
-    integration?: string;
-    number?: string;
-    token?: string;
-  };
+    integration?: string
+    number?: string
+    token?: string
+  }
 
   export type StateConnection = {
-    instance?: string;
-    state?: WAConnectionState | 'refused';
-    statusReason?: number;
-  };
+    instance?: string
+    state?: WAConnectionState | 'refused'
+    statusReason?: number
+  }
 
-  export type StatusMessage = 'ERROR' | 'PENDING' | 'SERVER_ACK' | 'DELIVERY_ACK' | 'READ' | 'DELETED' | 'PLAYED';
+  export type StatusMessage =
+    | 'ERROR'
+    | 'PENDING'
+    | 'SERVER_ACK'
+    | 'DELIVERY_ACK'
+    | 'READ'
+    | 'DELETED'
+    | 'PLAYED'
 }
 
-export const TypeMediaMessage = ['imageMessage', 'documentMessage', 'audioMessage', 'videoMessage', 'stickerMessage'];
+export const TypeMediaMessage = [
+  'imageMessage',
+  'documentMessage',
+  'audioMessage',
+  'videoMessage',
+  'stickerMessage',
+]
 
 export const MessageSubtype = [
   'ephemeralMessage',
   'documentWithCaptionMessage',
   'viewOnceMessage',
   'viewOnceMessageV2',
-];
+]
 
 export const Integration = {
   WHATSAPP_BUSINESS: 'WHATSAPP-BUSINESS',
   WHATSAPP_BAILEYS: 'WHATSAPP-BAILEYS',
-};
+}

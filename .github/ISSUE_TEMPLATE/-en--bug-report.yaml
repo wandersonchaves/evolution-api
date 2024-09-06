@@ -81,11 +81,11 @@ body:
         - Other
     validations:
       required: true
-  
+
   - type: textarea
     attributes:
       label: Other environment specifications
-      placeholder: 'Hardware/Software: [e.g., CPU, GPU]'
+      placeholder: "Hardware/Software: [e.g., CPU, GPU]"
     validations:
       required: false
 

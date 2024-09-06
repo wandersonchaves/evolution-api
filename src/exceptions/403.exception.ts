@@ -1,4 +1,4 @@
-import { HttpStatus } from '../api/routes/index.router';
+import {HttpStatus} from '../api/routes/index.router'
 
 export class ForbiddenException {
   constructor(...objectError: any[]) {
@@ -6,6 +6,6 @@ export class ForbiddenException {
       status: HttpStatus.FORBIDDEN,
       error: 'Forbidden',
       message: objectError.length > 0 ? objectError : undefined,
-    };
+    }
   }
 }

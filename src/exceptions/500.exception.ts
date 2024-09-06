@@ -1,4 +1,4 @@
-import { HttpStatus } from '../api/routes/index.router';
+import {HttpStatus} from '../api/routes/index.router'
 
 export class InternalServerErrorException {
   constructor(...objectError: any[]) {
@@ -6,6 +6,6 @@ export class InternalServerErrorException {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       error: 'Internal Server Error',
       message: objectError.length > 0 ? objectError : undefined,
-    };
+    }
   }
 }

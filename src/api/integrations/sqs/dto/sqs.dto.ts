@@ -1,4 +1,4 @@
 export class SqsDto {
-  enabled: boolean;
-  events?: string[];
+  enabled: boolean
+  events?: string[]
 }

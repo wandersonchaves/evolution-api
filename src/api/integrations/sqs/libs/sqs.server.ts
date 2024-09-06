@@ -1,16 +1,16 @@
-import { SQS } from '@aws-sdk/client-sqs';
+import {SQS} from '@aws-sdk/client-sqs'
 
-import { configService, Sqs } from '../../../../config/env.config';
-import { Logger } from '../../../../config/logger.config';
+import {configService, Sqs} from '../../../../config/env.config'
+import {Logger} from '../../../../config/logger.config'
 
-const logger = new Logger('SQS');
+const logger = new Logger('SQS')
 
-let sqs: SQS;
+let sqs: SQS
 
 export const initSQS = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return new Promise<void>((resolve, reject) => {
-    const awsConfig = configService.get<Sqs>('SQS');
+    const awsConfig = configService.get<Sqs>('SQS')
     sqs = new SQS({
       credentials: {
         accessKeyId: awsConfig.ACCESS_KEY_ID,
@@ -18,28 +18,28 @@ export const initSQS = () => {
       },
 
       region: awsConfig.REGION,
-    });
+    })
 
-    logger.info('SQS initialized');
-    resolve();
-  });
-};
+    logger.info('SQS initialized')
+    resolve()
+  })
+}
 
 export const getSQS = (): SQS => {
-  return sqs;
-};
+  return sqs
+}
 
 export const initQueues = (instanceName: string, events: string[]) => {
-  if (!events || !events.length) return;
+  if (!events || !events.length) return
 
   const queues = events.map((event) => {
-    return `${event.replace(/_/g, '_').toLowerCase()}`;
-  });
+    return `${event.replace(/_/g, '_').toLowerCase()}`
+  })
 
-  const sqs = getSQS();
+  const sqs = getSQS()
 
   queues.forEach((event) => {
-    const queueName = `${instanceName}_${event}.fifo`;
+    const queueName = `${instanceName}_${event}.fifo`
 
     sqs.createQueue(
       {
@@ -50,26 +50,26 @@ export const initQueues = (instanceName: string, events: string[]) => {
       },
       (err, data) => {
         if (err) {
-          logger.error(`Error creating queue ${queueName}: ${err.message}`);
+          logger.error(`Error creating queue ${queueName}: ${err.message}`)
         } else {
-          logger.info(`Queue ${queueName} created: ${data.QueueUrl}`);
+          logger.info(`Queue ${queueName} created: ${data.QueueUrl}`)
         }
       },
-    );
-  });
-};
+    )
+  })
+}
 
 export const removeQueues = (instanceName: string, events: string[]) => {
-  if (!events || !events.length) return;
+  if (!events || !events.length) return
 
-  const sqs = getSQS();
+  const sqs = getSQS()
 
   const queues = events.map((event) => {
-    return `${event.replace(/_/g, '_').toLowerCase()}`;
-  });
+    return `${event.replace(/_/g, '_').toLowerCase()}`
+  })
 
   queues.forEach((event) => {
-    const queueName = `${instanceName}_${event}.fifo`;
+    const queueName = `${instanceName}_${event}.fifo`
 
     sqs.getQueueUrl(
       {
@@ -77,9 +77,11 @@ export const removeQueues = (instanceName: string, events: string[]) => {
       },
       (err, data) => {
         if (err) {
-          logger.error(`Error getting queue URL for ${queueName}: ${err.message}`);
+          logger.error(
+            `Error getting queue URL for ${queueName}: ${err.message}`,
+          )
         } else {
-          const queueUrl = data.QueueUrl;
+          const queueUrl = data.QueueUrl
 
           sqs.deleteQueue(
             {
@@ -87,14 +89,16 @@ export const removeQueues = (instanceName: string, events: string[]) => {
             },
             (deleteErr) => {
               if (deleteErr) {
-                logger.error(`Error deleting queue ${queueName}: ${deleteErr.message}`);
+                logger.error(
+                  `Error deleting queue ${queueName}: ${deleteErr.message}`,
+                )
               } else {
-                logger.info(`Queue ${queueName} deleted`);
+                logger.info(`Queue ${queueName} deleted`)
               }
             },
-          );
+          )
         }
       },
-    );
-  });
-};
+    )
+  })
+}

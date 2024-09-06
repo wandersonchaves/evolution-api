@@ -1,4 +1,4 @@
 export class RabbitmqDto {
-  enabled: boolean;
-  events?: string[];
+  enabled: boolean
+  events?: string[]
 }

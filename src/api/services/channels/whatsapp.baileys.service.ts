@@ -139,8 +139,8 @@ import {
   TypeMediaMessage,
   wa,
 } from '../../types/wa.types'
-import {CacheService} from './../cache.service'
-import {ChannelStartupService} from './../channel.service'
+import {CacheService} from '../cache.service'
+import {ChannelStartupService} from '../channel.service'
 
 const groupMetadataCache = new CacheService(
   new CacheEngine(configService, 'groups').getEngine(),
@@ -1155,10 +1155,10 @@ export class BaileysStartupService extends ChannelStartupService {
 
         await this.contactHandle['contacts.upsert'](
           contacts
-            .filter((c) => !!c.notify ?? !!c.name)
+            .filter((c) => c.notify ?? c.name) // Aqui não há necessidade de `!!`
             .map((c) => ({
               id: c.id,
-              name: c.name ?? c.notify,
+              name: c.name ?? c.notify, // Mantém `??` para fallback
             })),
           database,
         )

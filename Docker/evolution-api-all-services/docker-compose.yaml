@@ -1,7 +1,6 @@
 version: '3.3'
 
 services:
-
   mongodb:
     container_name: mongodb
     image: mongo
@@ -55,7 +54,7 @@ services:
     restart: on-failure
     depends_on:
       - redis
-    ports: 
+    ports:
       - 5001:5001
     links:
       - redis
@@ -88,4 +87,3 @@ volumes:
 networks:
   evolution-net:
     external: true
-  

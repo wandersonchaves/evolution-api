@@ -14,7 +14,6 @@ services:
 volumes:
   evolution_redis:
 
-
 networks:
   evolution-net:
     name: evolution-net

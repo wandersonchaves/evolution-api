@@ -34,8 +34,8 @@ import {
 import {ProviderFiles} from '../../provider/sessions'
 import {RepositoryBroker} from '../../repository/repository.manager'
 import {Events, wa} from '../../types/wa.types'
-import {CacheService} from './../cache.service'
-import {ChannelStartupService} from './../channel.service'
+import {CacheService} from '../cache.service'
+import {ChannelStartupService} from '../channel.service'
 
 export class BusinessStartupService extends ChannelStartupService {
   constructor(

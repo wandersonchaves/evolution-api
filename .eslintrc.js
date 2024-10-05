@@ -41,6 +41,6 @@ module.exports = {
         },
       },
     ],
-    'prettier/prettier': ['error', {endOfLine: 'auto'}],
+    'prettier/prettier': ['error', { endOfLine: 'auto' }],
   },
 }

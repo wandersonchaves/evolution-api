@@ -1,17 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { InstanceDto } from '@api/dto/instance.dto';
-import { PrismaRepository } from '@api/repository/repository.service';
-import { WAMonitoringService } from '@api/services/monitor.service';
-import { Integration } from '@api/types/wa.types';
-import { ConfigService, Language } from '@config/env.config';
-import { Logger } from '@config/logger.config';
-import { IntegrationSession, OpenaiBot, OpenaiCreds, OpenaiSetting } from '@prisma/client';
-import { sendTelemetry } from '@utils/sendTelemetry';
-import axios from 'axios';
-import { downloadMediaMessage } from 'baileys';
-import FormData from 'form-data';
-import OpenAI from 'openai';
-import P from 'pino';
+import {InstanceDto} from '@api/dto/instance.dto'
+import {PrismaRepository} from '@api/repository/repository.service'
+import {WAMonitoringService} from '@api/services/monitor.service'
+import {Integration} from '@api/types/wa.types'
+import {ConfigService, Language} from '@config/env.config'
+import {Logger} from '@config/logger.config'
+import {
+  IntegrationSession,
+  OpenaiBot,
+  OpenaiCreds,
+  OpenaiSetting,
+} from '@prisma/client'
+import {sendTelemetry} from '@utils/sendTelemetry'
+import axios from 'axios'
+import {downloadMediaMessage} from 'baileys'
+import FormData from 'form-data'
+import OpenAI from 'openai'
+import P from 'pino'
 
 export class OpenaiService {
   constructor(
@@ -20,78 +25,88 @@ export class OpenaiService {
     private readonly prismaRepository: PrismaRepository,
   ) {}
 
-  private client: OpenAI;
+  private client: OpenAI
 
-  private readonly logger = new Logger('OpenaiService');
+  private readonly logger = new Logger('OpenaiService')
 
-  private async sendMessageToBot(instance: any, openaiBot: OpenaiBot, remoteJid: string, content: string) {
-    const systemMessages: any = openaiBot.systemMessages;
+  private async sendMessageToBot(
+    instance: any,
+    openaiBot: OpenaiBot,
+    remoteJid: string,
+    content: string,
+  ) {
+    const systemMessages: any = openaiBot.systemMessages
 
     const messagesSystem: any[] = systemMessages.map((message) => {
       return {
         role: 'system',
         content: message,
-      };
-    });
+      }
+    })
 
-    const assistantMessages: any = openaiBot.assistantMessages;
+    const assistantMessages: any = openaiBot.assistantMessages
 
     const messagesAssistant: any[] = assistantMessages.map((message) => {
       return {
         role: 'assistant',
         content: message,
-      };
-    });
+      }
+    })
 
-    const userMessages: any = openaiBot.userMessages;
+    const userMessages: any = openaiBot.userMessages
 
     const messagesUser: any[] = userMessages.map((message) => {
       return {
         role: 'user',
         content: message,
-      };
-    });
+      }
+    })
 
     const messageData: any = {
       role: 'user',
-      content: [{ type: 'text', text: content }],
-    };
+      content: [{type: 'text', text: content}],
+    }
 
     if (this.isImageMessage(content)) {
-      const contentSplit = content.split('|');
+      const contentSplit = content.split('|')
 
-      const url = contentSplit[1].split('?')[0];
+      const url = contentSplit[1].split('?')[0]
 
       messageData.content = [
-        { type: 'text', text: contentSplit[2] || content },
+        {type: 'text', text: contentSplit[2] || content},
         {
           type: 'image_url',
           image_url: {
             url: url,
           },
         },
-      ];
+      ]
     }
 
-    const messages: any[] = [...messagesSystem, ...messagesAssistant, ...messagesUser, messageData];
+    const messages: any[] = [
+      ...messagesSystem,
+      ...messagesAssistant,
+      ...messagesUser,
+      messageData,
+    ]
 
     if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-      await instance.client.presenceSubscribe(remoteJid);
-      await instance.client.sendPresenceUpdate('composing', remoteJid);
+      await instance.client.presenceSubscribe(remoteJid)
+      await instance.client.sendPresenceUpdate('composing', remoteJid)
     }
 
     const completions = await this.client.chat.completions.create({
       model: openaiBot.model,
       messages: messages,
       max_tokens: openaiBot.maxTokens,
-    });
+    })
 
     if (instance.integration === Integration.WHATSAPP_BAILEYS)
-      await instance.client.sendPresenceUpdate('paused', remoteJid);
+      await instance.client.sendPresenceUpdate('paused', remoteJid)
 
-    const message = completions.choices[0].message.content;
+    const message = completions.choices[0].message.content
 
-    return message;
+    return message
   }
 
   private async sendMessageToAssistant(
@@ -105,49 +120,55 @@ export class OpenaiService {
   ) {
     const messageData: any = {
       role: fromMe ? 'assistant' : 'user',
-      content: [{ type: 'text', text: content }],
-    };
+      content: [{type: 'text', text: content}],
+    }
 
     if (this.isImageMessage(content)) {
-      const contentSplit = content.split('|');
+      const contentSplit = content.split('|')
 
-      const url = contentSplit[1].split('?')[0];
+      const url = contentSplit[1].split('?')[0]
 
       messageData.content = [
-        { type: 'text', text: contentSplit[2] || content },
+        {type: 'text', text: contentSplit[2] || content},
         {
           type: 'image_url',
           image_url: {
             url: url,
           },
         },
-      ];
+      ]
     }
 
-    await this.client.beta.threads.messages.create(threadId, messageData);
+    await this.client.beta.threads.messages.create(threadId, messageData)
 
     if (fromMe) {
-      sendTelemetry('/message/sendText');
-      return;
+      sendTelemetry('/message/sendText')
+      return
     }
 
     const runAssistant = await this.client.beta.threads.runs.create(threadId, {
       assistant_id: openaiBot.assistantId,
-    });
+    })
 
     if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-      await instance.client.presenceSubscribe(remoteJid);
-      await instance.client.sendPresenceUpdate('composing', remoteJid);
+      await instance.client.presenceSubscribe(remoteJid)
+      await instance.client.sendPresenceUpdate('composing', remoteJid)
     }
 
-    const response = await this.getAIResponse(threadId, runAssistant.id, openaiBot.functionUrl, remoteJid, pushName);
+    const response = await this.getAIResponse(
+      threadId,
+      runAssistant.id,
+      openaiBot.functionUrl,
+      remoteJid,
+      pushName,
+    )
 
     if (instance.integration === Integration.WHATSAPP_BAILEYS)
-      await instance.client.sendPresenceUpdate('paused', remoteJid);
+      await instance.client.sendPresenceUpdate('paused', remoteJid)
 
-    const message = response?.data[0].content[0].text.value;
+    const message = response?.data[0].content[0].text.value
 
-    return message;
+    return message
   }
 
   private async sendMessageWhatsapp(
@@ -157,54 +178,66 @@ export class OpenaiService {
     settings: OpenaiSetting,
     message: string,
   ) {
-    const linkRegex = /(!?)\[(.*?)\]\((.*?)\)/g;
+    const linkRegex = /(!?)\[(.*?)\]\((.*?)\)/g
 
-    let textBuffer = '';
-    let lastIndex = 0;
+    let textBuffer = ''
+    let lastIndex = 0
 
-    let match: RegExpExecArray | null;
+    let match: RegExpExecArray | null
 
     const getMediaType = (url: string): string | null => {
-      const extension = url.split('.').pop()?.toLowerCase();
-      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-      const audioExtensions = ['mp3', 'wav', 'aac', 'ogg'];
-      const videoExtensions = ['mp4', 'avi', 'mkv', 'mov'];
-      const documentExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+      const extension = url.split('.').pop()?.toLowerCase()
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+      const audioExtensions = ['mp3', 'wav', 'aac', 'ogg']
+      const videoExtensions = ['mp4', 'avi', 'mkv', 'mov']
+      const documentExtensions = [
+        'pdf',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
+        'txt',
+      ]
 
-      if (imageExtensions.includes(extension || '')) return 'image';
-      if (audioExtensions.includes(extension || '')) return 'audio';
-      if (videoExtensions.includes(extension || '')) return 'video';
-      if (documentExtensions.includes(extension || '')) return 'document';
-      return null;
-    };
+      if (imageExtensions.includes(extension || '')) return 'image'
+      if (audioExtensions.includes(extension || '')) return 'audio'
+      if (videoExtensions.includes(extension || '')) return 'video'
+      if (documentExtensions.includes(extension || '')) return 'document'
+      return null
+    }
 
     while ((match = linkRegex.exec(message)) !== null) {
-      const [fullMatch, exclMark, altText, url] = match;
-      const mediaType = getMediaType(url);
+      const [fullMatch, exclMark, altText, url] = match
+      const mediaType = getMediaType(url)
 
-      const beforeText = message.slice(lastIndex, match.index);
+      const beforeText = message.slice(lastIndex, match.index)
       if (beforeText) {
-        textBuffer += beforeText;
+        textBuffer += beforeText
       }
 
       if (mediaType) {
-        const splitMessages = settings.splitMessages ?? false;
-        const timePerChar = settings.timePerChar ?? 0;
-        const minDelay = 1000;
-        const maxDelay = 20000;
+        const splitMessages = settings.splitMessages ?? false
+        const timePerChar = settings.timePerChar ?? 0
+        const minDelay = 1000
+        const maxDelay = 20000
 
         if (textBuffer.trim()) {
           if (splitMessages) {
-            const multipleMessages = textBuffer.trim().split('\n\n');
+            const multipleMessages = textBuffer.trim().split('\n\n')
 
             for (let index = 0; index < multipleMessages.length; index++) {
-              const message = multipleMessages[index];
+              const message = multipleMessages[index]
 
-              const delay = Math.min(Math.max(message.length * timePerChar, minDelay), maxDelay);
+              const delay = Math.min(
+                Math.max(message.length * timePerChar, minDelay),
+                maxDelay,
+              )
 
               if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-                await instance.client.presenceSubscribe(remoteJid);
-                await instance.client.sendPresenceUpdate('composing', remoteJid);
+                await instance.client.presenceSubscribe(remoteJid)
+                await instance.client.sendPresenceUpdate('composing', remoteJid)
               }
 
               await new Promise<void>((resolve) => {
@@ -216,13 +249,13 @@ export class OpenaiService {
                       text: message,
                     },
                     false,
-                  );
-                  resolve();
-                }, delay);
-              });
+                  )
+                  resolve()
+                }, delay)
+              })
 
               if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-                await instance.client.sendPresenceUpdate('paused', remoteJid);
+                await instance.client.sendPresenceUpdate('paused', remoteJid)
               }
             }
           } else {
@@ -233,9 +266,9 @@ export class OpenaiService {
                 text: textBuffer.trim(),
               },
               false,
-            );
+            )
           }
-          textBuffer = '';
+          textBuffer = ''
         }
 
         if (mediaType === 'audio') {
@@ -244,7 +277,7 @@ export class OpenaiService {
             delay: settings?.delayMessage || 1000,
             audio: url,
             caption: altText,
-          });
+          })
         } else {
           await instance.mediaMessage(
             {
@@ -256,39 +289,42 @@ export class OpenaiService {
             },
             null,
             false,
-          );
+          )
         }
       } else {
-        textBuffer += `[${altText}](${url})`;
+        textBuffer += `[${altText}](${url})`
       }
 
-      lastIndex = linkRegex.lastIndex;
+      lastIndex = linkRegex.lastIndex
     }
 
     if (lastIndex < message.length) {
-      const remainingText = message.slice(lastIndex);
+      const remainingText = message.slice(lastIndex)
       if (remainingText.trim()) {
-        textBuffer += remainingText;
+        textBuffer += remainingText
       }
     }
 
-    const splitMessages = settings.splitMessages ?? false;
-    const timePerChar = settings.timePerChar ?? 0;
-    const minDelay = 1000;
-    const maxDelay = 20000;
+    const splitMessages = settings.splitMessages ?? false
+    const timePerChar = settings.timePerChar ?? 0
+    const minDelay = 1000
+    const maxDelay = 20000
 
     if (textBuffer.trim()) {
       if (splitMessages) {
-        const multipleMessages = textBuffer.trim().split('\n\n');
+        const multipleMessages = textBuffer.trim().split('\n\n')
 
         for (let index = 0; index < multipleMessages.length; index++) {
-          const message = multipleMessages[index];
+          const message = multipleMessages[index]
 
-          const delay = Math.min(Math.max(message.length * timePerChar, minDelay), maxDelay);
+          const delay = Math.min(
+            Math.max(message.length * timePerChar, minDelay),
+            maxDelay,
+          )
 
           if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-            await instance.client.presenceSubscribe(remoteJid);
-            await instance.client.sendPresenceUpdate('composing', remoteJid);
+            await instance.client.presenceSubscribe(remoteJid)
+            await instance.client.sendPresenceUpdate('composing', remoteJid)
           }
 
           await new Promise<void>((resolve) => {
@@ -300,13 +336,13 @@ export class OpenaiService {
                   text: message,
                 },
                 false,
-              );
-              resolve();
-            }, delay);
-          });
+              )
+              resolve()
+            }, delay)
+          })
 
           if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-            await instance.client.sendPresenceUpdate('paused', remoteJid);
+            await instance.client.sendPresenceUpdate('paused', remoteJid)
           }
         }
       } else {
@@ -317,12 +353,12 @@ export class OpenaiService {
             text: textBuffer.trim(),
           },
           false,
-        );
+        )
       }
-      textBuffer = '';
+      textBuffer = ''
     }
 
-    sendTelemetry('/message/sendText');
+    sendTelemetry('/message/sendText')
 
     await this.prismaRepository.integrationSession.update({
       where: {
@@ -332,28 +368,28 @@ export class OpenaiService {
         status: 'opened',
         awaitUser: true,
       },
-    });
+    })
   }
 
   public async createAssistantNewSession(instance: InstanceDto, data: any) {
-    if (data.remoteJid === 'status@broadcast') return;
+    if (data.remoteJid === 'status@broadcast') return
 
     const creds = await this.prismaRepository.openaiCreds.findFirst({
       where: {
         id: data.openaiCredsId,
       },
-    });
+    })
 
-    if (!creds) throw new Error('Openai Creds not found');
+    if (!creds) throw new Error('Openai Creds not found')
 
     try {
       this.client = new OpenAI({
         apiKey: creds.apiKey,
-      });
+      })
 
-      const threadId = (await this.client.beta.threads.create({})).id;
+      const threadId = (await this.client.beta.threads.create({})).id
 
-      let session = null;
+      let session = null
       if (threadId) {
         session = await this.prismaRepository.integrationSession.create({
           data: {
@@ -366,12 +402,12 @@ export class OpenaiService {
             instanceId: instance.instanceId,
             type: 'openai',
           },
-        });
+        })
       }
-      return { session };
+      return {session}
     } catch (error) {
-      this.logger.error(error);
-      return;
+      this.logger.error(error)
+      return
     }
   }
 
@@ -390,10 +426,10 @@ export class OpenaiService {
       pushName,
       openaiCredsId: openaiBot.openaiCredsId,
       botId: openaiBot.id,
-    });
+    })
 
     if (data.session) {
-      session = data.session;
+      session = data.session
     }
 
     const message = await this.sendMessageToAssistant(
@@ -404,19 +440,25 @@ export class OpenaiService {
       fromMe,
       content,
       session.sessionId,
-    );
+    )
 
-    await this.sendMessageWhatsapp(instance, session, remoteJid, settings, message);
+    await this.sendMessageWhatsapp(
+      instance,
+      session,
+      remoteJid,
+      settings,
+      message,
+    )
 
-    return;
+    return
   }
 
   private isJSON(str: string): boolean {
     try {
-      JSON.parse(str);
-      return true;
+      JSON.parse(str)
+      return true
     } catch (e) {
-      return false;
+      return false
     }
   }
 
@@ -427,71 +469,93 @@ export class OpenaiService {
     remoteJid: string,
     pushName: string,
   ) {
-    const getRun = await this.client.beta.threads.runs.retrieve(threadId, runId);
-    let toolCalls;
+    const getRun = await this.client.beta.threads.runs.retrieve(threadId, runId)
+    let toolCalls
     switch (getRun.status) {
       case 'requires_action':
-        toolCalls = getRun?.required_action?.submit_tool_outputs?.tool_calls;
+        toolCalls = getRun?.required_action?.submit_tool_outputs?.tool_calls
 
         if (toolCalls) {
           for (const toolCall of toolCalls) {
-            const id = toolCall.id;
-            const functionName = toolCall?.function?.name;
+            const id = toolCall.id
+            const functionName = toolCall?.function?.name
             const functionArgument = this.isJSON(toolCall?.function?.arguments)
               ? JSON.parse(toolCall?.function?.arguments)
-              : toolCall?.function?.arguments;
+              : toolCall?.function?.arguments
 
-            let output = null;
+            let output = null
 
             try {
-              const { data } = await axios.post(functionUrl, {
+              const {data} = await axios.post(functionUrl, {
                 name: functionName,
-                arguments: { ...functionArgument, remoteJid, pushName },
-              });
+                arguments: {...functionArgument, remoteJid, pushName},
+              })
 
               output = JSON.stringify(data)
                 .replace(/\\/g, '\\\\')
                 .replace(/"/g, '\\"')
                 .replace(/\n/g, '\\n')
                 .replace(/\r/g, '\\r')
-                .replace(/\t/g, '\\t');
+                .replace(/\t/g, '\\t')
             } catch (error) {
               output = JSON.stringify(error)
                 .replace(/\\/g, '\\\\')
                 .replace(/"/g, '\\"')
                 .replace(/\n/g, '\\n')
                 .replace(/\r/g, '\\r')
-                .replace(/\t/g, '\\t');
+                .replace(/\t/g, '\\t')
             }
 
-            await this.client.beta.threads.runs.submitToolOutputs(threadId, runId, {
-              tool_outputs: [
-                {
-                  tool_call_id: id,
-                  output,
-                },
-              ],
-            });
+            await this.client.beta.threads.runs.submitToolOutputs(
+              threadId,
+              runId,
+              {
+                tool_outputs: [
+                  {
+                    tool_call_id: id,
+                    output,
+                  },
+                ],
+              },
+            )
           }
         }
 
-        return this.getAIResponse(threadId, runId, functionUrl, remoteJid, pushName);
+        return this.getAIResponse(
+          threadId,
+          runId,
+          functionUrl,
+          remoteJid,
+          pushName,
+        )
       case 'queued':
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        return this.getAIResponse(threadId, runId, functionUrl, remoteJid, pushName);
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return this.getAIResponse(
+          threadId,
+          runId,
+          functionUrl,
+          remoteJid,
+          pushName,
+        )
       case 'in_progress':
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        return this.getAIResponse(threadId, runId, functionUrl, remoteJid, pushName);
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return this.getAIResponse(
+          threadId,
+          runId,
+          functionUrl,
+          remoteJid,
+          pushName,
+        )
       case 'completed':
         return await this.client.beta.threads.messages.list(threadId, {
           run_id: runId,
           limit: 1,
-        });
+        })
     }
   }
 
   private isImageMessage(content: string) {
-    return content.includes('imageMessage');
+    return content.includes('imageMessage')
   }
 
   public async processOpenaiAssistant(
@@ -505,17 +569,17 @@ export class OpenaiService {
     content: string,
   ) {
     if (session && session.status === 'closed') {
-      return;
+      return
     }
 
     if (session && settings.expire && settings.expire > 0) {
-      const now = Date.now();
+      const now = Date.now()
 
-      const sessionUpdatedAt = new Date(session.updatedAt).getTime();
+      const sessionUpdatedAt = new Date(session.updatedAt).getTime()
 
-      const diff = now - sessionUpdatedAt;
+      const diff = now - sessionUpdatedAt
 
-      const diffInMinutes = Math.floor(diff / 1000 / 60);
+      const diffInMinutes = Math.floor(diff / 1000 / 60)
 
       if (diffInMinutes > settings.expire) {
         if (settings.keepOpen) {
@@ -526,14 +590,14 @@ export class OpenaiService {
             data: {
               status: 'closed',
             },
-          });
+          })
         } else {
           await this.prismaRepository.integrationSession.deleteMany({
             where: {
               botId: openaiBot.id,
               remoteJid: remoteJid,
             },
-          });
+          })
         }
 
         await this.initAssistantNewSession(
@@ -545,14 +609,23 @@ export class OpenaiService {
           settings,
           session,
           content,
-        );
-        return;
+        )
+        return
       }
     }
 
     if (!session) {
-      await this.initAssistantNewSession(instance, remoteJid, pushName, fromMe, openaiBot, settings, session, content);
-      return;
+      await this.initAssistantNewSession(
+        instance,
+        remoteJid,
+        pushName,
+        fromMe,
+        openaiBot,
+        settings,
+        session,
+        content,
+      )
+      return
     }
 
     if (session.status !== 'paused')
@@ -564,7 +637,7 @@ export class OpenaiService {
           status: 'opened',
           awaitUser: false,
         },
-      });
+      })
 
     if (!content) {
       if (settings.unknownMessage) {
@@ -575,14 +648,17 @@ export class OpenaiService {
             text: settings.unknownMessage,
           },
           false,
-        );
+        )
 
-        sendTelemetry('/message/sendText');
+        sendTelemetry('/message/sendText')
       }
-      return;
+      return
     }
 
-    if (settings.keywordFinish && content.toLowerCase() === settings.keywordFinish.toLowerCase()) {
+    if (
+      settings.keywordFinish &&
+      content.toLowerCase() === settings.keywordFinish.toLowerCase()
+    ) {
       if (settings.keepOpen) {
         await this.prismaRepository.integrationSession.update({
           where: {
@@ -591,31 +667,31 @@ export class OpenaiService {
           data: {
             status: 'closed',
           },
-        });
+        })
       } else {
         await this.prismaRepository.integrationSession.deleteMany({
           where: {
             botId: openaiBot.id,
             remoteJid: remoteJid,
           },
-        });
+        })
       }
-      return;
+      return
     }
 
     const creds = await this.prismaRepository.openaiCreds.findFirst({
       where: {
         id: openaiBot.openaiCredsId,
       },
-    });
+    })
 
-    if (!creds) throw new Error('Openai Creds not found');
+    if (!creds) throw new Error('Openai Creds not found')
 
     this.client = new OpenAI({
       apiKey: creds.apiKey,
-    });
+    })
 
-    const threadId = session.sessionId;
+    const threadId = session.sessionId
 
     const message = await this.sendMessageToAssistant(
       instance,
@@ -625,25 +701,34 @@ export class OpenaiService {
       fromMe,
       content,
       threadId,
-    );
+    )
 
-    await this.sendMessageWhatsapp(instance, session, remoteJid, settings, message);
+    await this.sendMessageWhatsapp(
+      instance,
+      session,
+      remoteJid,
+      settings,
+      message,
+    )
 
-    return;
+    return
   }
 
-  public async createChatCompletionNewSession(instance: InstanceDto, data: any) {
-    if (data.remoteJid === 'status@broadcast') return;
+  public async createChatCompletionNewSession(
+    instance: InstanceDto,
+    data: any,
+  ) {
+    if (data.remoteJid === 'status@broadcast') return
 
-    const id = Math.floor(Math.random() * 10000000000).toString();
+    const id = Math.floor(Math.random() * 10000000000).toString()
 
     const creds = await this.prismaRepository.openaiCreds.findFirst({
       where: {
         id: data.openaiCredsId,
       },
-    });
+    })
 
-    if (!creds) throw new Error('Openai Creds not found');
+    if (!creds) throw new Error('Openai Creds not found')
 
     try {
       const session = await this.prismaRepository.integrationSession.create({
@@ -657,12 +742,12 @@ export class OpenaiService {
           instanceId: instance.instanceId,
           type: 'openai',
         },
-      });
+      })
 
-      return { session, creds };
+      return {session, creds}
     } catch (error) {
-      this.logger.error(error);
-      return;
+      this.logger.error(error)
+      return
     }
   }
 
@@ -680,21 +765,32 @@ export class OpenaiService {
       pushName,
       openaiCredsId: openaiBot.openaiCredsId,
       botId: openaiBot.id,
-    });
+    })
 
-    session = data.session;
+    session = data.session
 
-    const creds = data.creds;
+    const creds = data.creds
 
     this.client = new OpenAI({
       apiKey: creds.apiKey,
-    });
+    })
 
-    const message = await this.sendMessageToBot(instance, openaiBot, remoteJid, content);
+    const message = await this.sendMessageToBot(
+      instance,
+      openaiBot,
+      remoteJid,
+      content,
+    )
 
-    await this.sendMessageWhatsapp(instance, session, remoteJid, settings, message);
+    await this.sendMessageWhatsapp(
+      instance,
+      session,
+      remoteJid,
+      settings,
+      message,
+    )
 
-    return;
+    return
   }
 
   public async processOpenaiChatCompletion(
@@ -707,17 +803,17 @@ export class OpenaiService {
     content: string,
   ) {
     if (session && session.status !== 'opened') {
-      return;
+      return
     }
 
     if (session && settings.expire && settings.expire > 0) {
-      const now = Date.now();
+      const now = Date.now()
 
-      const sessionUpdatedAt = new Date(session.updatedAt).getTime();
+      const sessionUpdatedAt = new Date(session.updatedAt).getTime()
 
-      const diff = now - sessionUpdatedAt;
+      const diff = now - sessionUpdatedAt
 
-      const diffInMinutes = Math.floor(diff / 1000 / 60);
+      const diffInMinutes = Math.floor(diff / 1000 / 60)
 
       if (diffInMinutes > settings.expire) {
         if (settings.keepOpen) {
@@ -728,24 +824,40 @@ export class OpenaiService {
             data: {
               status: 'closed',
             },
-          });
+          })
         } else {
           await this.prismaRepository.integrationSession.deleteMany({
             where: {
               botId: openaiBot.id,
               remoteJid: remoteJid,
             },
-          });
+          })
         }
 
-        await this.initChatCompletionNewSession(instance, remoteJid, pushName, openaiBot, settings, session, content);
-        return;
+        await this.initChatCompletionNewSession(
+          instance,
+          remoteJid,
+          pushName,
+          openaiBot,
+          settings,
+          session,
+          content,
+        )
+        return
       }
     }
 
     if (!session) {
-      await this.initChatCompletionNewSession(instance, remoteJid, pushName, openaiBot, settings, session, content);
-      return;
+      await this.initChatCompletionNewSession(
+        instance,
+        remoteJid,
+        pushName,
+        openaiBot,
+        settings,
+        session,
+        content,
+      )
+      return
     }
 
     await this.prismaRepository.integrationSession.update({
@@ -756,7 +868,7 @@ export class OpenaiService {
         status: 'opened',
         awaitUser: false,
       },
-    });
+    })
 
     if (!content) {
       if (settings.unknownMessage) {
@@ -767,14 +879,17 @@ export class OpenaiService {
             text: settings.unknownMessage,
           },
           false,
-        );
+        )
 
-        sendTelemetry('/message/sendText');
+        sendTelemetry('/message/sendText')
       }
-      return;
+      return
     }
 
-    if (settings.keywordFinish && content.toLowerCase() === settings.keywordFinish.toLowerCase()) {
+    if (
+      settings.keywordFinish &&
+      content.toLowerCase() === settings.keywordFinish.toLowerCase()
+    ) {
       if (settings.keepOpen) {
         await this.prismaRepository.integrationSession.update({
           where: {
@@ -783,73 +898,94 @@ export class OpenaiService {
           data: {
             status: 'closed',
           },
-        });
+        })
       } else {
         await this.prismaRepository.integrationSession.deleteMany({
           where: {
             botId: openaiBot.id,
             remoteJid: remoteJid,
           },
-        });
+        })
       }
-      return;
+      return
     }
 
     const creds = await this.prismaRepository.openaiCreds.findFirst({
       where: {
         id: openaiBot.openaiCredsId,
       },
-    });
+    })
 
-    if (!creds) throw new Error('Openai Creds not found');
+    if (!creds) throw new Error('Openai Creds not found')
 
     this.client = new OpenAI({
       apiKey: creds.apiKey,
-    });
+    })
 
-    const message = await this.sendMessageToBot(instance, openaiBot, remoteJid, content);
+    const message = await this.sendMessageToBot(
+      instance,
+      openaiBot,
+      remoteJid,
+      content,
+    )
 
-    await this.sendMessageWhatsapp(instance, session, remoteJid, settings, message);
+    await this.sendMessageWhatsapp(
+      instance,
+      session,
+      remoteJid,
+      settings,
+      message,
+    )
 
-    return;
+    return
   }
 
-  public async speechToText(creds: OpenaiCreds, msg: any, updateMediaMessage: any) {
-    let audio;
+  public async speechToText(
+    creds: OpenaiCreds,
+    msg: any,
+    updateMediaMessage: any,
+  ) {
+    let audio
 
     if (msg?.message?.mediaUrl) {
-      audio = await axios.get(msg.message.mediaUrl, { responseType: 'arraybuffer' }).then((response) => {
-        return Buffer.from(response.data, 'binary');
-      });
+      audio = await axios
+        .get(msg.message.mediaUrl, {responseType: 'arraybuffer'})
+        .then((response) => {
+          return Buffer.from(response.data, 'binary')
+        })
     } else {
       audio = await downloadMediaMessage(
-        { key: msg.key, message: msg?.message },
+        {key: msg.key, message: msg?.message},
         'buffer',
         {},
         {
-          logger: P({ level: 'error' }) as any,
+          logger: P({level: 'error'}) as any,
           reuploadRequest: updateMediaMessage,
         },
-      );
+      )
     }
 
     const lang = this.configService.get<Language>('LANGUAGE').includes('pt')
       ? 'pt'
-      : this.configService.get<Language>('LANGUAGE');
+      : this.configService.get<Language>('LANGUAGE')
 
-    const formData = new FormData();
+    const formData = new FormData()
 
-    formData.append('file', audio, 'audio.ogg');
-    formData.append('model', 'whisper-1');
-    formData.append('language', lang);
+    formData.append('file', audio, 'audio.ogg')
+    formData.append('model', 'whisper-1')
+    formData.append('language', lang)
 
-    const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${creds.apiKey}`,
+    const response = await axios.post(
+      'https://api.openai.com/v1/audio/transcriptions',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${creds.apiKey}`,
+        },
       },
-    });
+    )
 
-    return response?.data?.text;
+    return response?.data?.text
   }
 }

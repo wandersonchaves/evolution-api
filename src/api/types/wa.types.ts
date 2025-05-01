@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-namespace */
-import { JsonValue } from '@prisma/client/runtime/library';
-import { AuthenticationState, WAConnectionState } from 'baileys';
+import {JsonValue} from '@prisma/client/runtime/library'
+import {AuthenticationState, WAConnectionState} from 'baileys'
 
 export enum Events {
   APPLICATION_STARTUP = 'application.startup',
@@ -39,97 +39,104 @@ export enum Events {
 
 export declare namespace wa {
   export type QrCode = {
-    count?: number;
-    pairingCode?: string;
-    base64?: string;
-    code?: string;
-  };
+    count?: number
+    pairingCode?: string
+    base64?: string
+    code?: string
+  }
 
   export type Instance = {
-    id?: string;
-    qrcode?: QrCode;
-    pairingCode?: string;
-    authState?: { state: AuthenticationState; saveCreds: () => void };
-    name?: string;
-    wuid?: string;
-    profileName?: string;
-    profilePictureUrl?: string;
-    token?: string;
-    number?: string;
-    integration?: string;
-    businessId?: string;
-  };
+    id?: string
+    qrcode?: QrCode
+    pairingCode?: string
+    authState?: {state: AuthenticationState; saveCreds: () => void}
+    name?: string
+    wuid?: string
+    profileName?: string
+    profilePictureUrl?: string
+    token?: string
+    number?: string
+    integration?: string
+    businessId?: string
+  }
 
   export type LocalChatwoot = {
-    enabled?: boolean;
-    accountId?: string;
-    token?: string;
-    url?: string;
-    nameInbox?: string;
-    signMsg?: boolean;
-    signDelimiter?: string;
-    number?: string;
-    reopenConversation?: boolean;
-    conversationPending?: boolean;
-    mergeBrazilContacts?: boolean;
-    importContacts?: boolean;
-    importMessages?: boolean;
-    daysLimitImportMessages?: number;
-  };
+    enabled?: boolean
+    accountId?: string
+    token?: string
+    url?: string
+    nameInbox?: string
+    signMsg?: boolean
+    signDelimiter?: string
+    number?: string
+    reopenConversation?: boolean
+    conversationPending?: boolean
+    mergeBrazilContacts?: boolean
+    importContacts?: boolean
+    importMessages?: boolean
+    daysLimitImportMessages?: number
+  }
 
   export type LocalSettings = {
-    rejectCall?: boolean;
-    msgCall?: string;
-    groupsIgnore?: boolean;
-    alwaysOnline?: boolean;
-    readMessages?: boolean;
-    readStatus?: boolean;
-    syncFullHistory?: boolean;
-    wavoipToken?: string;
-  };
+    rejectCall?: boolean
+    msgCall?: string
+    groupsIgnore?: boolean
+    alwaysOnline?: boolean
+    readMessages?: boolean
+    readStatus?: boolean
+    syncFullHistory?: boolean
+    wavoipToken?: string
+  }
 
   export type LocalEvent = {
-    enabled?: boolean;
-    events?: JsonValue;
-  };
+    enabled?: boolean
+    events?: JsonValue
+  }
 
   export type LocalWebHook = LocalEvent & {
-    url?: string;
-    headers?: JsonValue;
-    webhookByEvents?: boolean;
-    webhookBase64?: boolean;
-  };
+    url?: string
+    headers?: JsonValue
+    webhookByEvents?: boolean
+    webhookBase64?: boolean
+  }
 
   export type LocalPusher = LocalEvent & {
-    appId?: string;
-    key?: string;
-    secret?: string;
-    cluster?: string;
-    useTLS?: boolean;
-  };
+    appId?: string
+    key?: string
+    secret?: string
+    cluster?: string
+    useTLS?: boolean
+  }
 
   type Session = {
-    remoteJid?: string;
-    sessionId?: string;
-    createdAt?: number;
-  };
+    remoteJid?: string
+    sessionId?: string
+    createdAt?: number
+  }
 
   export type LocalProxy = {
-    enabled?: boolean;
-    host?: string;
-    port?: string;
-    protocol?: string;
-    username?: string;
-    password?: string;
-  };
+    enabled?: boolean
+    host?: string
+    port?: string
+    protocol?: string
+    username?: string
+    password?: string
+  }
 
   export type StateConnection = {
-    instance?: string;
-    state?: WAConnectionState | 'refused';
-    statusReason?: number;
-  };
+    instance?: string
+    state?: WAConnectionState | 'refused'
+    statusReason?: number
+  }
 
-  export type StatusMessage = 'ERROR' | 'PENDING' | 'SERVER_ACK' | 'DELIVERY_ACK' | 'READ' | 'DELETED' | 'PLAYED';
+  export type StatusMessage =
+    | 'ERROR'
+    | 'PENDING'
+    | 'SERVER_ACK'
+    | 'DELIVERY_ACK'
+    | 'READ'
+    | 'DELETED'
+    | 'PLAYED'
 }
 
 export const TypeMediaMessage = [
@@ -139,17 +146,17 @@ export const TypeMediaMessage = [
   'videoMessage',
   'stickerMessage',
   'ptvMessage',
-];
+]
 
 export const MessageSubtype = [
   'ephemeralMessage',
   'documentWithCaptionMessage',
   'viewOnceMessage',
   'viewOnceMessageV2',
-];
+]
 
 export const Integration = {
   WHATSAPP_BUSINESS: 'WHATSAPP-BUSINESS',
   WHATSAPP_BAILEYS: 'WHATSAPP-BAILEYS',
   EVOLUTION: 'EVOLUTION',
-};
+}

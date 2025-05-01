@@ -1,27 +1,42 @@
-import { EventDto } from '@api/integrations/event/event.dto';
-import { PrismaRepository } from '@api/repository/repository.service';
-import { WAMonitoringService } from '@api/services/monitor.service';
-import { wa } from '@api/types/wa.types';
-import { configService, Log, Pusher as ConfigPusher } from '@config/env.config';
-import { Logger } from '@config/logger.config';
-import Pusher from 'pusher';
+import {EventDto} from '@api/integrations/event/event.dto'
+import {PrismaRepository} from '@api/repository/repository.service'
+import {WAMonitoringService} from '@api/services/monitor.service'
+import {wa} from '@api/types/wa.types'
+import {configService, Log, Pusher as ConfigPusher} from '@config/env.config'
+import {Logger} from '@config/logger.config'
+import Pusher from 'pusher'
 
-import { EmitData, EventController, EventControllerInterface } from '../event.controller';
-export class PusherController extends EventController implements EventControllerInterface {
-  private readonly logger = new Logger('PusherController');
-  private pusherClients: { [instanceName: string]: Pusher } = {};
-  private globalPusherClient: Pusher | null = null;
-  private pusherConfig: ConfigPusher = configService.get<ConfigPusher>('PUSHER');
-  constructor(prismaRepository: PrismaRepository, waMonitor: WAMonitoringService) {
-    super(prismaRepository, waMonitor, configService.get<ConfigPusher>('PUSHER')?.ENABLED, 'pusher');
-    this.init();
+import {
+  EmitData,
+  EventController,
+  EventControllerInterface,
+} from '../event.controller'
+export class PusherController
+  extends EventController
+  implements EventControllerInterface
+{
+  private readonly logger = new Logger('PusherController')
+  private pusherClients: {[instanceName: string]: Pusher} = {}
+  private globalPusherClient: Pusher | null = null
+  private pusherConfig: ConfigPusher = configService.get<ConfigPusher>('PUSHER')
+  constructor(
+    prismaRepository: PrismaRepository,
+    waMonitor: WAMonitoringService,
+  ) {
+    super(
+      prismaRepository,
+      waMonitor,
+      configService.get<ConfigPusher>('PUSHER')?.ENABLED,
+      'pusher',
+    )
+    this.init()
   }
   public async init(): Promise<void> {
     if (!this.status) {
-      return;
+      return
     }
     if (this.pusherConfig.GLOBAL?.ENABLED) {
-      const { APP_ID, KEY, SECRET, CLUSTER, USE_TLS } = this.pusherConfig.GLOBAL;
+      const {APP_ID, KEY, SECRET, CLUSTER, USE_TLS} = this.pusherConfig.GLOBAL
       if (APP_ID && KEY && SECRET && CLUSTER) {
         this.globalPusherClient = new Pusher({
           appId: APP_ID,
@@ -29,8 +44,8 @@ export class PusherController extends EventController implements EventController
           secret: SECRET,
           cluster: CLUSTER,
           useTLS: USE_TLS,
-        });
-        this.logger.info('Pusher global client initialized');
+        })
+        this.logger.info('Pusher global client initialized')
       }
     }
     const instances = await this.prismaRepository.instance.findMany({
@@ -42,7 +57,7 @@ export class PusherController extends EventController implements EventController
       include: {
         Pusher: true,
       },
-    });
+    })
     instances.forEach((instance) => {
       if (
         instance.Pusher.enabled &&
@@ -57,19 +72,26 @@ export class PusherController extends EventController implements EventController
           secret: instance.Pusher.secret,
           cluster: instance.Pusher.cluster,
           useTLS: instance.Pusher.useTLS,
-        });
-        this.logger.info(`Pusher client initialized for instance ${instance.name}`);
+        })
+        this.logger.info(
+          `Pusher client initialized for instance ${instance.name}`,
+        )
       } else {
-        delete this.pusherClients[instance.name];
-        this.logger.warn(`Pusher client disabled or misconfigured for instance ${instance.name}`);
+        delete this.pusherClients[instance.name]
+        this.logger.warn(
+          `Pusher client disabled or misconfigured for instance ${instance.name}`,
+        )
       }
-    });
+    })
   }
-  override async set(instanceName: string, data: EventDto): Promise<wa.LocalPusher> {
+  override async set(
+    instanceName: string,
+    data: EventDto,
+  ): Promise<wa.LocalPusher> {
     if (!data.pusher?.enabled) {
-      data.pusher.events = [];
+      data.pusher.events = []
     } else if (data.pusher.events.length === 0) {
-      data.pusher.events = EventController.events;
+      data.pusher.events = EventController.events
     }
     const instance = await this.prisma.pusher.upsert({
       where: {
@@ -94,21 +116,29 @@ export class PusherController extends EventController implements EventController
         cluster: data.pusher.cluster,
         useTLS: data.pusher.useTLS,
       },
-    });
-    if (instance.enabled && instance.appId && instance.key && instance.secret && instance.cluster) {
+    })
+    if (
+      instance.enabled &&
+      instance.appId &&
+      instance.key &&
+      instance.secret &&
+      instance.cluster
+    ) {
       this.pusherClients[instanceName] = new Pusher({
         appId: instance.appId,
         key: instance.key,
         secret: instance.secret,
         cluster: instance.cluster,
         useTLS: instance.useTLS,
-      });
-      this.logger.info(`Pusher client initialized for instance ${instanceName}`);
+      })
+      this.logger.info(`Pusher client initialized for instance ${instanceName}`)
     } else {
-      delete this.pusherClients[instanceName];
-      this.logger.warn(`Pusher client disabled or misconfigured for instance ${instanceName}`);
+      delete this.pusherClients[instanceName]
+      this.logger.warn(
+        `Pusher client disabled or misconfigured for instance ${instanceName}`,
+      )
     }
-    return instance;
+    return instance
   }
   public async emit({
     instanceName,
@@ -123,15 +153,15 @@ export class PusherController extends EventController implements EventController
     integration,
   }: EmitData): Promise<void> {
     if (integration && !integration.includes('pusher')) {
-      return;
+      return
     }
     if (!this.status) {
-      return;
+      return
     }
-    const instance = (await this.get(instanceName)) as wa.LocalPusher;
-    const we = event.replace(/[.-]/gm, '_').toUpperCase();
-    const enabledLog = configService.get<Log>('LOG').LEVEL.includes('WEBHOOKS');
-    const eventName = event.replace(/_/g, '.').toLowerCase();
+    const instance = (await this.get(instanceName)) as wa.LocalPusher
+    const we = event.replace(/[.-]/gm, '_').toUpperCase()
+    const enabledLog = configService.get<Log>('LOG').LEVEL.includes('WEBHOOKS')
+    const eventName = event.replace(/_/g, '.').toLowerCase()
     const pusherData = {
       event,
       instance: instanceName,
@@ -141,13 +171,13 @@ export class PusherController extends EventController implements EventController
       sender,
       server_url: serverUrl,
       apikey: apiKey,
-    };
-    if (event == 'qrcode.updated') {
-      delete pusherData.data.qrcode.base64;
     }
-    const payload = JSON.stringify(pusherData);
-    const payloadSize = Buffer.byteLength(payload, 'utf8');
-    const MAX_SIZE = 10240;
+    if (event == 'qrcode.updated') {
+      delete pusherData.data.qrcode.base64
+    }
+    const payload = JSON.stringify(pusherData)
+    const payloadSize = Buffer.byteLength(payload, 'utf8')
+    const MAX_SIZE = 10240
     if (payloadSize > MAX_SIZE) {
       this.logger.error({
         local: `${origin}.sendData-Pusher`,
@@ -155,57 +185,59 @@ export class PusherController extends EventController implements EventController
         event,
         instanceName,
         payloadSize,
-      });
-      return;
+      })
+      return
     }
     if (local && instance && instance.enabled) {
-      const pusherLocalEvents = instance.events;
+      const pusherLocalEvents = instance.events
       if (Array.isArray(pusherLocalEvents) && pusherLocalEvents.includes(we)) {
         if (enabledLog) {
           this.logger.log({
             local: `${origin}.sendData-Pusher`,
             appId: instance.appId,
             ...pusherData,
-          });
+          })
         }
         try {
-          const pusher = this.pusherClients[instanceName];
+          const pusher = this.pusherClients[instanceName]
           if (pusher) {
-            pusher.trigger(instanceName, eventName, pusherData);
+            pusher.trigger(instanceName, eventName, pusherData)
           } else {
-            this.logger.error(`Pusher client not found for instance ${instanceName}`);
+            this.logger.error(
+              `Pusher client not found for instance ${instanceName}`,
+            )
           }
         } catch (error) {
           this.logger.error({
             local: `${origin}.sendData-Pusher`,
             message: error?.message,
             error,
-          });
+          })
         }
       }
     }
     if (this.pusherConfig.GLOBAL?.ENABLED) {
-      const globalEvents = this.pusherConfig.EVENTS;
+      const globalEvents = this.pusherConfig.EVENTS
       if (globalEvents[we]) {
         if (enabledLog) {
           this.logger.log({
             local: `${origin}.sendData-Pusher-Global`,
             appId: this.pusherConfig.GLOBAL?.APP_ID,
             ...pusherData,
-          });
+          })
         }
         try {
           if (this.globalPusherClient) {
-            this.globalPusherClient.trigger(instanceName, eventName, pusherData);
+            this.globalPusherClient.trigger(instanceName, eventName, pusherData)
           } else {
-            this.logger.error('Global Pusher client not initialized');
+            this.logger.error('Global Pusher client not initialized')
           }
         } catch (error) {
           this.logger.error({
             local: `${origin}.sendData-Pusher-Global`,
             message: error?.message,
             error,
-          });
+          })
         }
       }
     }

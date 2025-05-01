@@ -1,10 +1,10 @@
-import { configService, S3 } from '@config/env.config';
+import {configService, S3} from '@config/env.config'
 
 const getTypeMessage = (msg: any) => {
-  let mediaId: string;
+  let mediaId: string
 
-  if (configService.get<S3>('S3').ENABLE) mediaId = msg.message.mediaUrl;
-  else mediaId = msg.key.id;
+  if (configService.get<S3>('S3').ENABLE) mediaId = msg.message.mediaUrl
+  else mediaId = msg.key.id
 
   const types = {
     conversation: msg?.message?.conversation,
@@ -16,10 +16,11 @@ const getTypeMessage = (msg: any) => {
       msg?.message?.viewOnceMessageV2?.message?.videoMessage?.url ||
       msg?.message?.viewOnceMessageV2?.message?.audioMessage?.url,
     listResponseMessage: msg?.message?.listResponseMessage?.title,
-    responseRowId: msg?.message?.listResponseMessage?.singleSelectReply?.selectedRowId,
+    responseRowId:
+      msg?.message?.listResponseMessage?.singleSelectReply?.selectedRowId,
     templateButtonReplyMessage:
-      msg?.message?.templateButtonReplyMessage?.selectedId || msg?.message?.buttonsResponseMessage?.selectedButtonId,
-    // Medias
+      msg?.message?.templateButtonReplyMessage?.selectedId ||
+      msg?.message?.buttonsResponseMessage?.selectedButtonId,
     audioMessage: msg?.message?.speechToText
       ? msg?.message?.speechToText
       : msg?.message?.audioMessage
@@ -33,12 +34,16 @@ const getTypeMessage = (msg: any) => {
       : undefined,
     documentMessage: msg?.message?.documentMessage
       ? `documentMessage|${mediaId}${
-          msg?.message?.documentMessage?.caption ? `|${msg?.message?.documentMessage?.caption}` : ''
+          msg?.message?.documentMessage?.caption
+            ? `|${msg?.message?.documentMessage?.caption}`
+            : ''
         }`
       : undefined,
-    documentWithCaptionMessage: msg?.message?.documentWithCaptionMessage?.message?.documentMessage
+    documentWithCaptionMessage: msg?.message?.documentWithCaptionMessage
+      ?.message?.documentMessage
       ? `documentWithCaptionMessage|${mediaId}${
-          msg?.message?.documentWithCaptionMessage?.message?.documentMessage?.caption
+          msg?.message?.documentWithCaptionMessage?.message?.documentMessage
+            ?.caption
             ? `|${msg?.message?.documentWithCaptionMessage?.message?.documentMessage?.caption}`
             : ''
         }`
@@ -46,29 +51,34 @@ const getTypeMessage = (msg: any) => {
     externalAdReplyBody: msg?.contextInfo?.externalAdReply?.body
       ? `externalAdReplyBody|${msg.contextInfo.externalAdReply.body}`
       : undefined,
-  };
-
-  const messageType = Object.keys(types).find((key) => types[key] !== undefined) || 'unknown';
-
-  return { ...types, messageType };
-};
-
-const getMessageContent = (types: any) => {
-  const typeKey = Object.keys(types).find((key) => key !== 'externalAdReplyBody' && types[key] !== undefined);
-
-  let result = typeKey ? types[typeKey] : undefined;
-
-  if (types.externalAdReplyBody) {
-    result = result ? `${result}\n${types.externalAdReplyBody}` : types.externalAdReplyBody;
   }
 
-  return result;
-};
+  const messageType =
+    Object.keys(types).find((key) => types[key] !== undefined) || 'unknown'
+
+  return {...types, messageType}
+}
+
+const getMessageContent = (types: any) => {
+  const typeKey = Object.keys(types).find(
+    (key) => key !== 'externalAdReplyBody' && types[key] !== undefined,
+  )
+
+  let result = typeKey ? types[typeKey] : undefined
+
+  if (types.externalAdReplyBody) {
+    result = result
+      ? `${result}\n${types.externalAdReplyBody}`
+      : types.externalAdReplyBody
+  }
+
+  return result
+}
 
 export const getConversationMessage = (msg: any) => {
-  const types = getTypeMessage(msg);
+  const types = getTypeMessage(msg)
 
-  const messageContent = getMessageContent(types);
+  const messageContent = getMessageContent(types)
 
-  return messageContent;
-};
+  return messageContent
+}

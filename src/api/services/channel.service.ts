@@ -1,25 +1,25 @@
-import { InstanceDto } from '@api/dto/instance.dto';
-import { ProxyDto } from '@api/dto/proxy.dto';
-import { SettingsDto } from '@api/dto/settings.dto';
-import { ChatwootDto } from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto';
-import { ChatwootService } from '@api/integrations/chatbot/chatwoot/services/chatwoot.service';
-import { DifyService } from '@api/integrations/chatbot/dify/services/dify.service';
-import { OpenaiService } from '@api/integrations/chatbot/openai/services/openai.service';
-import { TypebotService } from '@api/integrations/chatbot/typebot/services/typebot.service';
-import { PrismaRepository, Query } from '@api/repository/repository.service';
-import { eventManager, waMonitor } from '@api/server.module';
-import { Events, wa } from '@api/types/wa.types';
-import { Auth, Chatwoot, ConfigService, HttpServer } from '@config/env.config';
-import { Logger } from '@config/logger.config';
-import { NotFoundException } from '@exceptions';
-import { Contact, Message, Prisma } from '@prisma/client';
-import { createJid } from '@utils/createJid';
-import { WASocket } from 'baileys';
-import { isArray } from 'class-validator';
-import EventEmitter2 from 'eventemitter2';
-import { v4 } from 'uuid';
+import {InstanceDto} from '@api/dto/instance.dto'
+import {ProxyDto} from '@api/dto/proxy.dto'
+import {SettingsDto} from '@api/dto/settings.dto'
+import {ChatwootDto} from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto'
+import {ChatwootService} from '@api/integrations/chatbot/chatwoot/services/chatwoot.service'
+import {DifyService} from '@api/integrations/chatbot/dify/services/dify.service'
+import {OpenaiService} from '@api/integrations/chatbot/openai/services/openai.service'
+import {TypebotService} from '@api/integrations/chatbot/typebot/services/typebot.service'
+import {PrismaRepository, Query} from '@api/repository/repository.service'
+import {eventManager, waMonitor} from '@api/server.module'
+import {Events, wa} from '@api/types/wa.types'
+import {Auth, Chatwoot, ConfigService, HttpServer} from '@config/env.config'
+import {Logger} from '@config/logger.config'
+import {NotFoundException} from '@exceptions'
+import {Contact, Message, Prisma} from '@prisma/client'
+import {createJid} from '@utils/createJid'
+import {WASocket} from 'baileys'
+import {isArray} from 'class-validator'
+import EventEmitter2 from 'eventemitter2'
+import {v4} from 'uuid'
 
-import { CacheService } from './cache.service';
+import {CacheService} from './cache.service'
 
 export class ChannelStartupService {
   constructor(
@@ -29,102 +29,117 @@ export class ChannelStartupService {
     public readonly chatwootCache: CacheService,
   ) {}
 
-  public readonly logger = new Logger('ChannelStartupService');
+  public readonly logger = new Logger('ChannelStartupService')
 
-  public client: WASocket;
-  public readonly instance: wa.Instance = {};
-  public readonly localChatwoot: wa.LocalChatwoot = {};
-  public readonly localProxy: wa.LocalProxy = {};
-  public readonly localSettings: wa.LocalSettings = {};
-  public readonly localWebhook: wa.LocalWebHook = {};
+  public client: WASocket
+  public readonly instance: wa.Instance = {}
+  public readonly localChatwoot: wa.LocalChatwoot = {}
+  public readonly localProxy: wa.LocalProxy = {}
+  public readonly localSettings: wa.LocalSettings = {}
+  public readonly localWebhook: wa.LocalWebHook = {}
 
   public chatwootService = new ChatwootService(
     waMonitor,
     this.configService,
     this.prismaRepository,
     this.chatwootCache,
-  );
+  )
 
-  public typebotService = new TypebotService(waMonitor, this.configService, this.prismaRepository);
+  public typebotService = new TypebotService(
+    waMonitor,
+    this.configService,
+    this.prismaRepository,
+  )
 
-  public openaiService = new OpenaiService(waMonitor, this.configService, this.prismaRepository);
+  public openaiService = new OpenaiService(
+    waMonitor,
+    this.configService,
+    this.prismaRepository,
+  )
 
-  public difyService = new DifyService(waMonitor, this.configService, this.prismaRepository);
+  public difyService = new DifyService(
+    waMonitor,
+    this.configService,
+    this.prismaRepository,
+  )
 
   public setInstance(instance: InstanceDto) {
-    this.logger.setInstance(instance.instanceName);
+    this.logger.setInstance(instance.instanceName)
 
-    this.instance.name = instance.instanceName;
-    this.instance.id = instance.instanceId;
-    this.instance.integration = instance.integration;
-    this.instance.number = instance.number;
-    this.instance.token = instance.token;
-    this.instance.businessId = instance.businessId;
+    this.instance.name = instance.instanceName
+    this.instance.id = instance.instanceId
+    this.instance.integration = instance.integration
+    this.instance.number = instance.number
+    this.instance.token = instance.token
+    this.instance.businessId = instance.businessId
 
-    if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
+    if (
+      this.configService.get<Chatwoot>('CHATWOOT').ENABLED &&
+      this.localChatwoot?.enabled
+    ) {
       this.chatwootService.eventWhatsapp(
         Events.STATUS_INSTANCE,
-        { instanceName: this.instance.name },
+        {instanceName: this.instance.name},
         {
           instance: this.instance.name,
           status: 'created',
         },
-      );
+      )
     }
   }
 
   public set instanceName(name: string) {
-    this.logger.setInstance(name);
+    this.logger.setInstance(name)
 
     if (!name) {
-      this.instance.name = v4();
-      return;
+      this.instance.name = v4()
+      return
     }
-    this.instance.name = name;
+    this.instance.name = name
   }
 
   public get instanceName() {
-    return this.instance.name;
+    return this.instance.name
   }
 
   public set instanceId(id: string) {
     if (!id) {
-      this.instance.id = v4();
-      return;
+      this.instance.id = v4()
+      return
     }
-    this.instance.id = id;
+    this.instance.id = id
   }
 
   public get instanceId() {
-    return this.instance.id;
+    return this.instance.id
   }
 
   public set integration(integration: string) {
-    this.instance.integration = integration;
+    this.instance.integration = integration
   }
 
   public get integration() {
-    return this.instance.integration;
+    return this.instance.integration
   }
 
   public set number(number: string) {
-    this.instance.number = number;
+    this.instance.number = number
   }
 
   public get number() {
-    return this.instance.number;
+    return this.instance.number
   }
 
   public set token(token: string) {
-    this.instance.token = token;
+    this.instance.token = token
   }
 
   public get token() {
-    return this.instance.token;
+    return this.instance.token
   }
 
   public get wuid() {
-    return this.instance.wuid;
+    return this.instance.wuid
   }
 
   public async loadWebhook() {
@@ -132,10 +147,10 @@ export class ChannelStartupService {
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
-    this.localWebhook.enabled = data?.enabled;
-    this.localWebhook.webhookBase64 = data?.webhookBase64;
+    this.localWebhook.enabled = data?.enabled
+    this.localWebhook.webhookBase64 = data?.webhookBase64
   }
 
   public async loadSettings() {
@@ -143,16 +158,16 @@ export class ChannelStartupService {
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
-    this.localSettings.rejectCall = data?.rejectCall;
-    this.localSettings.msgCall = data?.msgCall;
-    this.localSettings.groupsIgnore = data?.groupsIgnore;
-    this.localSettings.alwaysOnline = data?.alwaysOnline;
-    this.localSettings.readMessages = data?.readMessages;
-    this.localSettings.readStatus = data?.readStatus;
-    this.localSettings.syncFullHistory = data?.syncFullHistory;
-    this.localSettings.wavoipToken = data?.wavoipToken;
+    this.localSettings.rejectCall = data?.rejectCall
+    this.localSettings.msgCall = data?.msgCall
+    this.localSettings.groupsIgnore = data?.groupsIgnore
+    this.localSettings.alwaysOnline = data?.alwaysOnline
+    this.localSettings.readMessages = data?.readMessages
+    this.localSettings.readStatus = data?.readStatus
+    this.localSettings.syncFullHistory = data?.syncFullHistory
+    this.localSettings.wavoipToken = data?.wavoipToken
   }
 
   public async setSettings(data: SettingsDto) {
@@ -181,20 +196,23 @@ export class ChannelStartupService {
         wavoipToken: data.wavoipToken,
         instanceId: this.instanceId,
       },
-    });
+    })
 
-    this.localSettings.rejectCall = data?.rejectCall;
-    this.localSettings.msgCall = data?.msgCall;
-    this.localSettings.groupsIgnore = data?.groupsIgnore;
-    this.localSettings.alwaysOnline = data?.alwaysOnline;
-    this.localSettings.readMessages = data?.readMessages;
-    this.localSettings.readStatus = data?.readStatus;
-    this.localSettings.syncFullHistory = data?.syncFullHistory;
-    this.localSettings.wavoipToken = data?.wavoipToken;
+    this.localSettings.rejectCall = data?.rejectCall
+    this.localSettings.msgCall = data?.msgCall
+    this.localSettings.groupsIgnore = data?.groupsIgnore
+    this.localSettings.alwaysOnline = data?.alwaysOnline
+    this.localSettings.readMessages = data?.readMessages
+    this.localSettings.readStatus = data?.readStatus
+    this.localSettings.syncFullHistory = data?.syncFullHistory
+    this.localSettings.wavoipToken = data?.wavoipToken
 
-    if (this.localSettings.wavoipToken && this.localSettings.wavoipToken.length > 0) {
-      this.client.ws.close();
-      this.client.ws.connect();
+    if (
+      this.localSettings.wavoipToken &&
+      this.localSettings.wavoipToken.length > 0
+    ) {
+      this.client.ws.close()
+      this.client.ws.connect()
     }
   }
 
@@ -203,10 +221,10 @@ export class ChannelStartupService {
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
     if (!data) {
-      return null;
+      return null
     }
 
     return {
@@ -218,46 +236,46 @@ export class ChannelStartupService {
       readStatus: data.readStatus,
       syncFullHistory: data.syncFullHistory,
       wavoipToken: data.wavoipToken,
-    };
+    }
   }
 
   public async loadChatwoot() {
     if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED) {
-      return;
+      return
     }
 
     const data = await this.prismaRepository.chatwoot.findUnique({
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
-    this.localChatwoot.enabled = data?.enabled;
-    this.localChatwoot.accountId = data?.accountId;
-    this.localChatwoot.token = data?.token;
-    this.localChatwoot.url = data?.url;
-    this.localChatwoot.nameInbox = data?.nameInbox;
-    this.localChatwoot.signMsg = data?.signMsg;
-    this.localChatwoot.signDelimiter = data?.signDelimiter;
-    this.localChatwoot.number = data?.number;
-    this.localChatwoot.reopenConversation = data?.reopenConversation;
-    this.localChatwoot.conversationPending = data?.conversationPending;
-    this.localChatwoot.mergeBrazilContacts = data?.mergeBrazilContacts;
-    this.localChatwoot.importContacts = data?.importContacts;
-    this.localChatwoot.importMessages = data?.importMessages;
-    this.localChatwoot.daysLimitImportMessages = data?.daysLimitImportMessages;
+    this.localChatwoot.enabled = data?.enabled
+    this.localChatwoot.accountId = data?.accountId
+    this.localChatwoot.token = data?.token
+    this.localChatwoot.url = data?.url
+    this.localChatwoot.nameInbox = data?.nameInbox
+    this.localChatwoot.signMsg = data?.signMsg
+    this.localChatwoot.signDelimiter = data?.signDelimiter
+    this.localChatwoot.number = data?.number
+    this.localChatwoot.reopenConversation = data?.reopenConversation
+    this.localChatwoot.conversationPending = data?.conversationPending
+    this.localChatwoot.mergeBrazilContacts = data?.mergeBrazilContacts
+    this.localChatwoot.importContacts = data?.importContacts
+    this.localChatwoot.importMessages = data?.importMessages
+    this.localChatwoot.daysLimitImportMessages = data?.daysLimitImportMessages
   }
 
   public async setChatwoot(data: ChatwootDto) {
     if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED) {
-      return;
+      return
     }
 
     const chatwoot = await this.prismaRepository.chatwoot.findUnique({
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
     if (chatwoot) {
       await this.prismaRepository.chatwoot.update({
@@ -283,12 +301,15 @@ export class ChannelStartupService {
           logo: data.logo,
           ignoreJids: data.ignoreJids,
         },
-      });
+      })
 
-      Object.assign(this.localChatwoot, { ...data, signDelimiter: data.signMsg ? data.signDelimiter : null });
+      Object.assign(this.localChatwoot, {
+        ...data,
+        signDelimiter: data.signMsg ? data.signDelimiter : null,
+      })
 
-      this.clearCacheChatwoot();
-      return;
+      this.clearCacheChatwoot()
+      return
     }
 
     await this.prismaRepository.chatwoot.create({
@@ -311,29 +332,34 @@ export class ChannelStartupService {
         ignoreJids: data.ignoreJids,
         instanceId: this.instanceId,
       },
-    });
+    })
 
-    Object.assign(this.localChatwoot, { ...data, signDelimiter: data.signMsg ? data.signDelimiter : null });
+    Object.assign(this.localChatwoot, {
+      ...data,
+      signDelimiter: data.signMsg ? data.signDelimiter : null,
+    })
 
-    this.clearCacheChatwoot();
+    this.clearCacheChatwoot()
   }
 
   public async findChatwoot(): Promise<ChatwootDto | null> {
     if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED) {
-      return null;
+      return null
     }
 
     const data = await this.prismaRepository.chatwoot.findUnique({
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
     if (!data) {
-      return null;
+      return null
     }
 
-    const ignoreJidsArray = Array.isArray(data.ignoreJids) ? data.ignoreJids.map((event) => String(event)) : [];
+    const ignoreJidsArray = Array.isArray(data.ignoreJids)
+      ? data.ignoreJids.map((event) => String(event))
+      : []
 
     return {
       enabled: data?.enabled,
@@ -352,40 +378,40 @@ export class ChannelStartupService {
       organization: data.organization,
       logo: data.logo,
       ignoreJids: ignoreJidsArray,
-    };
+    }
   }
 
   public clearCacheChatwoot() {
     if (this.localChatwoot?.enabled) {
-      this.chatwootService.getCache()?.deleteAll(this.instanceName);
+      this.chatwootService.getCache()?.deleteAll(this.instanceName)
     }
   }
 
   public async loadProxy() {
-    this.localProxy.enabled = false;
+    this.localProxy.enabled = false
 
     if (process.env.PROXY_HOST) {
-      this.localProxy.enabled = true;
-      this.localProxy.host = process.env.PROXY_HOST;
-      this.localProxy.port = process.env.PROXY_PORT || '80';
-      this.localProxy.protocol = process.env.PROXY_PROTOCOL || 'http';
-      this.localProxy.username = process.env.PROXY_USERNAME;
-      this.localProxy.password = process.env.PROXY_PASSWORD;
+      this.localProxy.enabled = true
+      this.localProxy.host = process.env.PROXY_HOST
+      this.localProxy.port = process.env.PROXY_PORT || '80'
+      this.localProxy.protocol = process.env.PROXY_PROTOCOL || 'http'
+      this.localProxy.username = process.env.PROXY_USERNAME
+      this.localProxy.password = process.env.PROXY_PASSWORD
     }
 
     const data = await this.prismaRepository.proxy.findUnique({
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
     if (data?.enabled) {
-      this.localProxy.enabled = true;
-      this.localProxy.host = data?.host;
-      this.localProxy.port = data?.port;
-      this.localProxy.protocol = data?.protocol;
-      this.localProxy.username = data?.username;
-      this.localProxy.password = data?.password;
+      this.localProxy.enabled = true
+      this.localProxy.host = data?.host
+      this.localProxy.port = data?.port
+      this.localProxy.protocol = data?.protocol
+      this.localProxy.username = data?.username
+      this.localProxy.password = data?.password
     }
   }
 
@@ -411,9 +437,9 @@ export class ChannelStartupService {
         password: data.password,
         instanceId: this.instanceId,
       },
-    });
+    })
 
-    Object.assign(this.localProxy, data);
+    Object.assign(this.localProxy, data)
   }
 
   public async findProxy() {
@@ -421,24 +447,30 @@ export class ChannelStartupService {
       where: {
         instanceId: this.instanceId,
       },
-    });
+    })
 
     if (!data) {
-      throw new NotFoundException('Proxy not found');
+      throw new NotFoundException('Proxy not found')
     }
 
-    return data;
+    return data
   }
 
-  public async sendDataWebhook<T = any>(event: Events, data: T, local = true, integration?: string[]) {
-    const serverUrl = this.configService.get<HttpServer>('SERVER').URL;
-    const tzoffset = new Date().getTimezoneOffset() * 60000; //offset in milliseconds
-    const localISOTime = new Date(Date.now() - tzoffset).toISOString();
-    const now = localISOTime;
+  public async sendDataWebhook<T = any>(
+    event: Events,
+    data: T,
+    local = true,
+    integration?: string[],
+  ) {
+    const serverUrl = this.configService.get<HttpServer>('SERVER').URL
+    const tzoffset = new Date().getTimezoneOffset() * 60000 //offset in milliseconds
+    const localISOTime = new Date(Date.now() - tzoffset).toISOString()
+    const now = localISOTime
 
-    const expose = this.configService.get<Auth>('AUTHENTICATION').EXPOSE_IN_FETCH_INSTANCES;
+    const expose =
+      this.configService.get<Auth>('AUTHENTICATION').EXPOSE_IN_FETCH_INSTANCES
 
-    const instanceApikey = this.token || 'Apikey not found';
+    const instanceApikey = this.token || 'Apikey not found'
 
     await eventManager.emit({
       instanceName: this.instance.name,
@@ -451,40 +483,38 @@ export class ChannelStartupService {
       apiKey: expose && instanceApikey ? instanceApikey : null,
       local,
       integration,
-    });
+    })
   }
 
-  // Check if the number is MX or AR
   public formatMXOrARNumber(jid: string): string {
-    const countryCode = jid.substring(0, 2);
+    const countryCode = jid.substring(0, 2)
 
     if (Number(countryCode) === 52 || Number(countryCode) === 54) {
       if (jid.length === 13) {
-        const number = countryCode + jid.substring(3);
-        return number;
+        const number = countryCode + jid.substring(3)
+        return number
       }
 
-      return jid;
+      return jid
     }
-    return jid;
+    return jid
   }
 
-  // Check if the number is br
   public formatBRNumber(jid: string) {
-    const regexp = new RegExp(/^(\d{2})(\d{2})\d{1}(\d{8})$/);
+    const regexp = new RegExp(/^(\d{2})(\d{2})\d{1}(\d{8})$/)
     if (regexp.test(jid)) {
-      const match = regexp.exec(jid);
+      const match = regexp.exec(jid)
       if (match && match[1] === '55') {
-        const joker = Number.parseInt(match[3][0]);
-        const ddd = Number.parseInt(match[2]);
+        const joker = Number.parseInt(match[3][0])
+        const ddd = Number.parseInt(match[2])
         if (joker < 7 || ddd < 31) {
-          return match[0];
+          return match[0]
         }
-        return match[1] + match[2] + match[3];
+        return match[1] + match[2] + match[3]
       }
-      return jid;
+      return jid
     } else {
-      return jid;
+      return jid
     }
   }
 
@@ -493,94 +523,95 @@ export class ChannelStartupService {
       ? query?.where?.remoteJid.includes('@')
         ? query.where?.remoteJid
         : createJid(query.where?.remoteJid)
-      : null;
+      : null
 
     const where = {
       instanceId: this.instanceId,
-    };
+    }
 
     if (remoteJid) {
-      where['remoteJid'] = remoteJid;
+      where['remoteJid'] = remoteJid
     }
 
     return await this.prismaRepository.contact.findMany({
       where,
-    });
+    })
   }
 
   public cleanMessageData(message: any) {
-    if (!message) return message;
+    if (!message) return message
 
-    const cleanedMessage = { ...message };
+    const cleanedMessage = {...message}
 
-    const mediaUrl = cleanedMessage.message.mediaUrl;
+    const mediaUrl = cleanedMessage.message.mediaUrl
 
-    delete cleanedMessage.message.base64;
+    delete cleanedMessage.message.base64
 
     if (cleanedMessage.message) {
-      // Limpa imageMessage
       if (cleanedMessage.message.imageMessage) {
         cleanedMessage.message.imageMessage = {
           caption: cleanedMessage.message.imageMessage.caption,
-        };
+        }
       }
 
-      // Limpa videoMessage
       if (cleanedMessage.message.videoMessage) {
         cleanedMessage.message.videoMessage = {
           caption: cleanedMessage.message.videoMessage.caption,
-        };
+        }
       }
 
-      // Limpa audioMessage
       if (cleanedMessage.message.audioMessage) {
         cleanedMessage.message.audioMessage = {
           seconds: cleanedMessage.message.audioMessage.seconds,
-        };
+        }
       }
 
-      // Limpa stickerMessage
       if (cleanedMessage.message.stickerMessage) {
-        cleanedMessage.message.stickerMessage = {};
+        cleanedMessage.message.stickerMessage = {}
       }
 
-      // Limpa documentMessage
       if (cleanedMessage.message.documentMessage) {
         cleanedMessage.message.documentMessage = {
           caption: cleanedMessage.message.documentMessage.caption,
           name: cleanedMessage.message.documentMessage.name,
-        };
+        }
       }
 
-      // Limpa documentWithCaptionMessage
       if (cleanedMessage.message.documentWithCaptionMessage) {
         cleanedMessage.message.documentWithCaptionMessage = {
           caption: cleanedMessage.message.documentWithCaptionMessage.caption,
           name: cleanedMessage.message.documentWithCaptionMessage.name,
-        };
+        }
       }
     }
 
-    if (mediaUrl) cleanedMessage.message.mediaUrl = mediaUrl;
+    if (mediaUrl) cleanedMessage.message.mediaUrl = mediaUrl
 
-    return cleanedMessage;
+    return cleanedMessage
   }
 
   public async fetchMessages(query: Query<Message>) {
     const keyFilters = query?.where?.key as {
-      id?: string;
-      fromMe?: boolean;
-      remoteJid?: string;
-      participants?: string;
-    };
+      id?: string
+      fromMe?: boolean
+      remoteJid?: string
+      participants?: string
+    }
 
-    const timestampFilter = {};
+    const timestampFilter = {}
     if (query?.where?.messageTimestamp) {
-      if (query.where.messageTimestamp['gte'] && query.where.messageTimestamp['lte']) {
+      if (
+        query.where.messageTimestamp['gte'] &&
+        query.where.messageTimestamp['lte']
+      ) {
         timestampFilter['messageTimestamp'] = {
-          gte: Math.floor(new Date(query.where.messageTimestamp['gte']).getTime() / 1000),
-          lte: Math.floor(new Date(query.where.messageTimestamp['lte']).getTime() / 1000),
-        };
+          gte: Math.floor(
+            new Date(query.where.messageTimestamp['gte']).getTime() / 1000,
+          ),
+          lte: Math.floor(
+            new Date(query.where.messageTimestamp['lte']).getTime() / 1000,
+          ),
+        }
       }
     }
 
@@ -592,20 +623,26 @@ export class ChannelStartupService {
         messageType: query?.where?.messageType,
         ...timestampFilter,
         AND: [
-          keyFilters?.id ? { key: { path: ['id'], equals: keyFilters?.id } } : {},
-          keyFilters?.fromMe ? { key: { path: ['fromMe'], equals: keyFilters?.fromMe } } : {},
-          keyFilters?.remoteJid ? { key: { path: ['remoteJid'], equals: keyFilters?.remoteJid } } : {},
-          keyFilters?.participants ? { key: { path: ['participants'], equals: keyFilters?.participants } } : {},
+          keyFilters?.id ? {key: {path: ['id'], equals: keyFilters?.id}} : {},
+          keyFilters?.fromMe
+            ? {key: {path: ['fromMe'], equals: keyFilters?.fromMe}}
+            : {},
+          keyFilters?.remoteJid
+            ? {key: {path: ['remoteJid'], equals: keyFilters?.remoteJid}}
+            : {},
+          keyFilters?.participants
+            ? {key: {path: ['participants'], equals: keyFilters?.participants}}
+            : {},
         ],
       },
-    });
+    })
 
     if (!query?.offset) {
-      query.offset = 50;
+      query.offset = 50
     }
 
     if (!query?.page) {
-      query.page = 1;
+      query.page = 1
     }
 
     const messages = await this.prismaRepository.message.findMany({
@@ -616,16 +653,23 @@ export class ChannelStartupService {
         messageType: query?.where?.messageType,
         ...timestampFilter,
         AND: [
-          keyFilters?.id ? { key: { path: ['id'], equals: keyFilters?.id } } : {},
-          keyFilters?.fromMe ? { key: { path: ['fromMe'], equals: keyFilters?.fromMe } } : {},
-          keyFilters?.remoteJid ? { key: { path: ['remoteJid'], equals: keyFilters?.remoteJid } } : {},
-          keyFilters?.participants ? { key: { path: ['participants'], equals: keyFilters?.participants } } : {},
+          keyFilters?.id ? {key: {path: ['id'], equals: keyFilters?.id}} : {},
+          keyFilters?.fromMe
+            ? {key: {path: ['fromMe'], equals: keyFilters?.fromMe}}
+            : {},
+          keyFilters?.remoteJid
+            ? {key: {path: ['remoteJid'], equals: keyFilters?.remoteJid}}
+            : {},
+          keyFilters?.participants
+            ? {key: {path: ['participants'], equals: keyFilters?.participants}}
+            : {},
         ],
       },
       orderBy: {
         messageTimestamp: 'desc',
       },
-      skip: query.offset * (query?.page === 1 ? 0 : (query?.page as number) - 1),
+      skip:
+        query.offset * (query?.page === 1 ? 0 : (query?.page as number) - 1),
       take: query.offset,
       select: {
         id: true,
@@ -643,7 +687,7 @@ export class ChannelStartupService {
           },
         },
       },
-    });
+    })
 
     return {
       messages: {
@@ -652,7 +696,7 @@ export class ChannelStartupService {
         currentPage: query.page,
         records: messages,
       },
-    };
+    }
   }
 
   public async fetchStatusMessage(query: any) {
@@ -662,9 +706,10 @@ export class ChannelStartupService {
         remoteJid: query.where?.remoteJid,
         keyId: query.where?.id,
       },
-      skip: query.offset * (query?.page === 1 ? 0 : (query?.page as number) - 1),
+      skip:
+        query.offset * (query?.page === 1 ? 0 : (query?.page as number) - 1),
       take: query.offset,
-    });
+    })
   }
 
   public async fetchChats(query: any) {
@@ -672,14 +717,14 @@ export class ChannelStartupService {
       ? query?.where?.remoteJid.includes('@')
         ? query.where?.remoteJid
         : createJid(query.where?.remoteJid)
-      : null;
+      : null
 
     const where = {
       instanceId: this.instanceId,
-    };
+    }
 
     if (remoteJid) {
-      where['remoteJid'] = remoteJid;
+      where['remoteJid'] = remoteJid
     }
 
     const timestampFilter =
@@ -687,7 +732,7 @@ export class ChannelStartupService {
         ? Prisma.sql`
           AND "Message"."messageTimestamp" >= ${Math.floor(new Date(query.where.messageTimestamp.gte).getTime() / 1000)}
           AND "Message"."messageTimestamp" <= ${Math.floor(new Date(query.where.messageTimestamp.lte).getTime() / 1000)}`
-        : Prisma.sql``;
+        : Prisma.sql``
 
     const results = await this.prismaRepository.$queryRaw`
         WITH rankedMessages AS (
@@ -733,7 +778,7 @@ export class ChannelStartupService {
         )
         SELECT * FROM rankedMessages
         ORDER BY "updatedAt" DESC NULLS LAST;
-    `;
+    `
 
     if (results && isArray(results) && results.length > 0) {
       const mappedResults = results.map((contact) => {
@@ -752,7 +797,7 @@ export class ChannelStartupService {
               sessionId: contact.lastMessageSessionId,
               status: contact.lastMessageStatus,
             }
-          : undefined;
+          : undefined
 
         return {
           id: contact.id,
@@ -763,13 +808,15 @@ export class ChannelStartupService {
           windowStart: contact.windowStart,
           windowExpires: contact.windowExpires,
           windowActive: contact.windowActive,
-          lastMessage: lastMessage ? this.cleanMessageData(lastMessage) : undefined,
-        };
-      });
+          lastMessage: lastMessage
+            ? this.cleanMessageData(lastMessage)
+            : undefined,
+        }
+      })
 
-      return mappedResults;
+      return mappedResults
     }
 
-    return [];
+    return []
   }
 }

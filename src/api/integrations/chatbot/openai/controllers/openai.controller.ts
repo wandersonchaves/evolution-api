@@ -1,45 +1,57 @@
-import { IgnoreJidDto } from '@api/dto/chatbot.dto';
-import { InstanceDto } from '@api/dto/instance.dto';
-import { OpenaiCredsDto, OpenaiDto } from '@api/integrations/chatbot/openai/dto/openai.dto';
-import { OpenaiService } from '@api/integrations/chatbot/openai/services/openai.service';
-import { PrismaRepository } from '@api/repository/repository.service';
-import { WAMonitoringService } from '@api/services/monitor.service';
-import { configService, Openai } from '@config/env.config';
-import { Logger } from '@config/logger.config';
-import { BadRequestException } from '@exceptions';
-import { OpenaiBot } from '@prisma/client';
-import { getConversationMessage } from '@utils/getConversationMessage';
-import OpenAI from 'openai';
+import {IgnoreJidDto} from '@api/dto/chatbot.dto'
+import {InstanceDto} from '@api/dto/instance.dto'
+import {
+  OpenaiCredsDto,
+  OpenaiDto,
+} from '@api/integrations/chatbot/openai/dto/openai.dto'
+import {OpenaiService} from '@api/integrations/chatbot/openai/services/openai.service'
+import {PrismaRepository} from '@api/repository/repository.service'
+import {WAMonitoringService} from '@api/services/monitor.service'
+import {configService, Openai} from '@config/env.config'
+import {Logger} from '@config/logger.config'
+import {BadRequestException} from '@exceptions'
+import {OpenaiBot} from '@prisma/client'
+import {getConversationMessage} from '@utils/getConversationMessage'
+import OpenAI from 'openai'
 
-import { ChatbotController, ChatbotControllerInterface, EmitData } from '../../chatbot.controller';
+import {
+  ChatbotController,
+  ChatbotControllerInterface,
+  EmitData,
+} from '../../chatbot.controller'
 
-export class OpenaiController extends ChatbotController implements ChatbotControllerInterface {
+export class OpenaiController
+  extends ChatbotController
+  implements ChatbotControllerInterface
+{
   constructor(
     private readonly openaiService: OpenaiService,
     prismaRepository: PrismaRepository,
     waMonitor: WAMonitoringService,
   ) {
-    super(prismaRepository, waMonitor);
+    super(prismaRepository, waMonitor)
 
-    this.botRepository = this.prismaRepository.openaiBot;
-    this.settingsRepository = this.prismaRepository.openaiSetting;
-    this.sessionRepository = this.prismaRepository.integrationSession;
-    this.credsRepository = this.prismaRepository.openaiCreds;
+    this.botRepository = this.prismaRepository.openaiBot
+    this.settingsRepository = this.prismaRepository.openaiSetting
+    this.sessionRepository = this.prismaRepository.integrationSession
+    this.credsRepository = this.prismaRepository.openaiCreds
   }
 
-  public readonly logger = new Logger('OpenaiController');
+  public readonly logger = new Logger('OpenaiController')
 
-  integrationEnabled = configService.get<Openai>('OPENAI').ENABLED;
-  botRepository: any;
-  settingsRepository: any;
-  sessionRepository: any;
-  userMessageDebounce: { [key: string]: { message: string; timeoutId: NodeJS.Timeout } } = {};
-  private client: OpenAI;
-  private credsRepository: any;
+  integrationEnabled = configService.get<Openai>('OPENAI').ENABLED
+  botRepository: any
+  settingsRepository: any
+  sessionRepository: any
+  userMessageDebounce: {
+    [key: string]: {message: string; timeoutId: NodeJS.Timeout}
+  } = {}
+  private client: OpenAI
+  private credsRepository: any
 
-  // Credentials
   public async createOpenaiCreds(instance: InstanceDto, data: OpenaiCredsDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -47,10 +59,10 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
-    if (!data.apiKey) throw new Error('API Key is required');
-    if (!data.name) throw new Error('Name is required');
+    if (!data.apiKey) throw new Error('API Key is required')
+    if (!data.name) throw new Error('Name is required')
 
     try {
       const creds = await this.credsRepository.create({
@@ -59,17 +71,18 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           apiKey: data.apiKey,
           instanceId: instanceId,
         },
-      });
+      })
 
-      return creds;
+      return creds
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error creating openai creds');
+      this.logger.error(error)
+      throw new Error('Error creating openai creds')
     }
   }
 
   public async findOpenaiCreds(instance: InstanceDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -77,7 +90,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     const creds = await this.credsRepository.findMany({
       where: {
@@ -86,13 +99,14 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
       include: {
         OpenaiAssistant: true,
       },
-    });
+    })
 
-    return creds;
+    return creds
   }
 
   public async deleteCreds(instance: InstanceDto, openaiCredsId: string) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -100,20 +114,20 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     const creds = await this.credsRepository.findFirst({
       where: {
         id: openaiCredsId,
       },
-    });
+    })
 
     if (!creds) {
-      throw new Error('Openai Creds not found');
+      throw new Error('Openai Creds not found')
     }
 
     if (creds.instanceId !== instanceId) {
-      throw new Error('Openai Creds not found');
+      throw new Error('Openai Creds not found')
     }
 
     try {
@@ -121,18 +135,18 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         where: {
           id: openaiCredsId,
         },
-      });
+      })
 
-      return { openaiCreds: { id: openaiCredsId } };
+      return {openaiCreds: {id: openaiCredsId}}
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error deleting openai creds');
+      this.logger.error(error)
+      throw new Error('Error deleting openai creds')
     }
   }
 
-  // Models
   public async getModels(instance: InstanceDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -140,9 +154,9 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
-    if (!instanceId) throw new Error('Instance not found');
+    if (!instanceId) throw new Error('Instance not found')
 
     const defaultSettings = await this.settingsRepository.findFirst({
       where: {
@@ -151,27 +165,27 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
       include: {
         OpenaiCreds: true,
       },
-    });
+    })
 
-    if (!defaultSettings) throw new Error('Settings not found');
+    if (!defaultSettings) throw new Error('Settings not found')
 
-    const { apiKey } = defaultSettings.OpenaiCreds;
+    const {apiKey} = defaultSettings.OpenaiCreds
 
     try {
-      this.client = new OpenAI({ apiKey });
+      this.client = new OpenAI({apiKey})
 
-      const models: any = await this.client.models.list();
+      const models: any = await this.client.models.list()
 
-      return models?.body?.data;
+      return models?.body?.data
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error fetching models');
+      this.logger.error(error)
+      throw new Error('Error fetching models')
     }
   }
 
-  // Bots
   public async createBot(instance: InstanceDto, data: OpenaiDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -179,7 +193,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     if (
       !data.openaiCredsId ||
@@ -199,30 +213,33 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         where: {
           instanceId: instanceId,
         },
-      });
+      })
 
-      if (data.expire === undefined || data.expire === null) data.expire = defaultSettingCheck.expire;
+      if (data.expire === undefined || data.expire === null)
+        data.expire = defaultSettingCheck.expire
       if (data.keywordFinish === undefined || data.keywordFinish === null)
-        data.keywordFinish = defaultSettingCheck.keywordFinish;
+        data.keywordFinish = defaultSettingCheck.keywordFinish
       if (data.delayMessage === undefined || data.delayMessage === null)
-        data.delayMessage = defaultSettingCheck.delayMessage;
+        data.delayMessage = defaultSettingCheck.delayMessage
       if (data.unknownMessage === undefined || data.unknownMessage === null)
-        data.unknownMessage = defaultSettingCheck.unknownMessage;
+        data.unknownMessage = defaultSettingCheck.unknownMessage
       if (data.listeningFromMe === undefined || data.listeningFromMe === null)
-        data.listeningFromMe = defaultSettingCheck.listeningFromMe;
+        data.listeningFromMe = defaultSettingCheck.listeningFromMe
       if (data.stopBotFromMe === undefined || data.stopBotFromMe === null)
-        data.stopBotFromMe = defaultSettingCheck.stopBotFromMe;
-      if (data.keepOpen === undefined || data.keepOpen === null) data.keepOpen = defaultSettingCheck.keepOpen;
+        data.stopBotFromMe = defaultSettingCheck.stopBotFromMe
+      if (data.keepOpen === undefined || data.keepOpen === null)
+        data.keepOpen = defaultSettingCheck.keepOpen
       if (data.debounceTime === undefined || data.debounceTime === null)
-        data.debounceTime = defaultSettingCheck.debounceTime;
-      if (data.ignoreJids === undefined || data.ignoreJids === null) data.ignoreJids = defaultSettingCheck.ignoreJids;
+        data.debounceTime = defaultSettingCheck.debounceTime
+      if (data.ignoreJids === undefined || data.ignoreJids === null)
+        data.ignoreJids = defaultSettingCheck.ignoreJids
       if (data.splitMessages === undefined || data.splitMessages === null)
-        data.splitMessages = defaultSettingCheck?.splitMessages ?? false;
+        data.splitMessages = defaultSettingCheck?.splitMessages ?? false
       if (data.timePerChar === undefined || data.timePerChar === null)
-        data.timePerChar = defaultSettingCheck?.timePerChar ?? 0;
+        data.timePerChar = defaultSettingCheck?.timePerChar ?? 0
 
       if (!data.openaiCredsId) {
-        throw new Error('Openai Creds Id is required');
+        throw new Error('Openai Creds Id is required')
       }
 
       if (!defaultSettingCheck) {
@@ -239,7 +256,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           ignoreJids: data.ignoreJids,
           splitMessages: data.splitMessages,
           timePerChar: data.timePerChar,
-        });
+        })
       }
     }
 
@@ -249,49 +266,51 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         triggerType: 'all',
         instanceId: instanceId,
       },
-    });
+    })
 
     if (checkTriggerAll && data.triggerType === 'all') {
-      throw new Error('You already have a openai with an "All" trigger, you cannot have more bots while it is active');
+      throw new Error(
+        'You already have a openai with an "All" trigger, you cannot have more bots while it is active',
+      )
     }
 
     let whereDuplication: any = {
       instanceId: instanceId,
-    };
+    }
 
     if (data.botType === 'assistant') {
-      if (!data.assistantId) throw new Error('Assistant ID is required');
+      if (!data.assistantId) throw new Error('Assistant ID is required')
 
       whereDuplication = {
         ...whereDuplication,
         assistantId: data.assistantId,
         botType: data.botType,
-      };
+      }
     } else if (data.botType === 'chatCompletion') {
-      if (!data.model) throw new Error('Model is required');
-      if (!data.maxTokens) throw new Error('Max tokens is required');
+      if (!data.model) throw new Error('Model is required')
+      if (!data.maxTokens) throw new Error('Max tokens is required')
 
       whereDuplication = {
         ...whereDuplication,
         model: data.model,
         maxTokens: data.maxTokens,
         botType: data.botType,
-      };
+      }
     } else {
-      throw new Error('Bot type is required');
+      throw new Error('Bot type is required')
     }
 
     const checkDuplicate = await this.botRepository.findFirst({
       where: whereDuplication,
-    });
+    })
 
     if (checkDuplicate) {
-      throw new Error('Openai Bot already exists');
+      throw new Error('Openai Bot already exists')
     }
 
     if (data.triggerType === 'keyword') {
       if (!data.triggerOperator || !data.triggerValue) {
-        throw new Error('Trigger operator and value are required');
+        throw new Error('Trigger operator and value are required')
       }
 
       const checkDuplicate = await this.botRepository.findFirst({
@@ -300,16 +319,16 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           triggerValue: data.triggerValue,
           instanceId: instanceId,
         },
-      });
+      })
 
       if (checkDuplicate) {
-        throw new Error('Trigger already exists');
+        throw new Error('Trigger already exists')
       }
     }
 
     if (data.triggerType === 'advanced') {
       if (!data.triggerValue) {
-        throw new Error('Trigger value is required');
+        throw new Error('Trigger value is required')
       }
 
       const checkDuplicate = await this.botRepository.findFirst({
@@ -317,10 +336,10 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           triggerValue: data.triggerValue,
           instanceId: instanceId,
         },
-      });
+      })
 
       if (checkDuplicate) {
-        throw new Error('Trigger already exists');
+        throw new Error('Trigger already exists')
       }
     }
 
@@ -354,17 +373,18 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           splitMessages: data.splitMessages,
           timePerChar: data.timePerChar,
         },
-      });
+      })
 
-      return bot;
+      return bot
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error creating openai bot');
+      this.logger.error(error)
+      throw new Error('Error creating openai bot')
     }
   }
 
   public async findBot(instance: InstanceDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -372,23 +392,24 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     const bots = await this.botRepository.findMany({
       where: {
         instanceId,
       },
-    });
+    })
 
     if (!bots.length) {
-      return null;
+      return null
     }
 
-    return bots;
+    return bots
   }
 
   public async fetchBot(instance: InstanceDto, botId: string) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -396,27 +417,32 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     const bot = await this.botRepository.findFirst({
       where: {
         id: botId,
       },
-    });
+    })
 
     if (!bot) {
-      throw new Error('Openai Bot not found');
+      throw new Error('Openai Bot not found')
     }
 
     if (bot.instanceId !== instanceId) {
-      throw new Error('Openai Bot not found');
+      throw new Error('Openai Bot not found')
     }
 
-    return bot;
+    return bot
   }
 
-  public async updateBot(instance: InstanceDto, botId: string, data: OpenaiDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+  public async updateBot(
+    instance: InstanceDto,
+    botId: string,
+    data: OpenaiDto,
+  ) {
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -424,20 +450,20 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     const bot = await this.botRepository.findFirst({
       where: {
         id: botId,
       },
-    });
+    })
 
     if (!bot) {
-      throw new Error('Openai Bot not found');
+      throw new Error('Openai Bot not found')
     }
 
     if (bot.instanceId !== instanceId) {
-      throw new Error('Openai Bot not found');
+      throw new Error('Openai Bot not found')
     }
 
     if (data.triggerType === 'all') {
@@ -450,12 +476,12 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           },
           instanceId: instanceId,
         },
-      });
+      })
 
       if (checkTriggerAll) {
         throw new Error(
           'You already have a openai bot with an "All" trigger, you cannot have more bots while it is active',
-        );
+        )
       }
     }
 
@@ -464,70 +490,70 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         not: botId,
       },
       instanceId: instanceId,
-    };
+    }
 
     if (data.botType === 'assistant') {
-      if (!data.assistantId) throw new Error('Assistant ID is required');
+      if (!data.assistantId) throw new Error('Assistant ID is required')
 
       whereDuplication = {
         ...whereDuplication,
         assistantId: data.assistantId,
-      };
+      }
     } else if (data.botType === 'chatCompletion') {
-      if (!data.model) throw new Error('Model is required');
-      if (!data.maxTokens) throw new Error('Max tokens is required');
+      if (!data.model) throw new Error('Model is required')
+      if (!data.maxTokens) throw new Error('Max tokens is required')
 
       whereDuplication = {
         ...whereDuplication,
         model: data.model,
         maxTokens: data.maxTokens,
-      };
+      }
     } else {
-      throw new Error('Bot type is required');
+      throw new Error('Bot type is required')
     }
 
     const checkDuplicate = await this.botRepository.findFirst({
       where: whereDuplication,
-    });
+    })
 
     if (checkDuplicate) {
-      throw new Error('Openai Bot already exists');
+      throw new Error('Openai Bot already exists')
     }
 
     if (data.triggerType === 'keyword') {
       if (!data.triggerOperator || !data.triggerValue) {
-        throw new Error('Trigger operator and value are required');
+        throw new Error('Trigger operator and value are required')
       }
 
       const checkDuplicate = await this.botRepository.findFirst({
         where: {
           triggerOperator: data.triggerOperator,
           triggerValue: data.triggerValue,
-          id: { not: botId },
+          id: {not: botId},
           instanceId: instanceId,
         },
-      });
+      })
 
       if (checkDuplicate) {
-        throw new Error('Trigger already exists');
+        throw new Error('Trigger already exists')
       }
     }
 
     if (data.triggerType === 'advanced') {
       if (!data.triggerValue) {
-        throw new Error('Trigger value is required');
+        throw new Error('Trigger value is required')
       }
 
       const checkDuplicate = await this.botRepository.findFirst({
         where: {
           triggerValue: data.triggerValue,
-          id: { not: botId },
+          id: {not: botId},
           instanceId: instanceId,
         },
-      });
+      })
 
       if (checkDuplicate) {
-        throw new Error('Trigger already exists');
+        throw new Error('Trigger already exists')
       }
     }
 
@@ -564,17 +590,18 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           splitMessages: data.splitMessages,
           timePerChar: data.timePerChar,
         },
-      });
+      })
 
-      return bot;
+      return bot
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error updating openai bot');
+      this.logger.error(error)
+      throw new Error('Error updating openai bot')
     }
   }
 
   public async deleteBot(instance: InstanceDto, botId: string) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     const instanceId = await this.prismaRepository.instance
       .findFirst({
@@ -582,44 +609,44 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           name: instance.instanceName,
         },
       })
-      .then((instance) => instance.id);
+      .then((instance) => instance.id)
 
     const bot = await this.botRepository.findFirst({
       where: {
         id: botId,
       },
-    });
+    })
 
     if (!bot) {
-      throw new Error('Openai bot not found');
+      throw new Error('Openai bot not found')
     }
 
     if (bot.instanceId !== instanceId) {
-      throw new Error('Openai bot not found');
+      throw new Error('Openai bot not found')
     }
     try {
       await this.sessionRepository.deleteMany({
         where: {
           botId: botId,
         },
-      });
+      })
 
       await this.botRepository.delete({
         where: {
           id: botId,
         },
-      });
+      })
 
-      return { bot: { id: botId } };
+      return {bot: {id: botId}}
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error deleting openai bot');
+      this.logger.error(error)
+      throw new Error('Error deleting openai bot')
     }
   }
 
-  // Settings
   public async settings(instance: InstanceDto, data: any) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     try {
       const instanceId = await this.prismaRepository.instance
@@ -628,13 +655,13 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             name: instance.instanceName,
           },
         })
-        .then((instance) => instance.id);
+        .then((instance) => instance.id)
 
       const settings = await this.settingsRepository.findFirst({
         where: {
           instanceId: instanceId,
         },
-      });
+      })
 
       if (settings) {
         const updateSettings = await this.settingsRepository.update({
@@ -657,7 +684,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             splitMessages: data.splitMessages,
             timePerChar: data.timePerChar,
           },
-        });
+        })
 
         return {
           openaiCredsId: updateSettings.openaiCredsId,
@@ -674,7 +701,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           ignoreJids: updateSettings.ignoreJids,
           splitMessages: updateSettings.splitMessages,
           timePerChar: updateSettings.timePerChar,
-        };
+        }
       }
 
       const newSetttings = await this.settingsRepository.create({
@@ -695,7 +722,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           splitMessages: data.splitMessages,
           timePerChar: data.timePerChar,
         },
-      });
+      })
 
       return {
         openaiCredsId: newSetttings.openaiCredsId,
@@ -712,25 +739,26 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         speechToText: newSetttings.speechToText,
         splitMessages: newSetttings.splitMessages,
         timePerChar: newSetttings.timePerChar,
-      };
+      }
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error setting default settings');
+      this.logger.error(error)
+      throw new Error('Error setting default settings')
     }
   }
 
   public async fetchSettings(instance: InstanceDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     try {
       const instanceId = (
         await this.prismaRepository.instance.findFirst({
-          select: { id: true },
+          select: {id: true},
           where: {
             name: instance.instanceName,
           },
         })
-      )?.id;
+      )?.id
 
       const settings = await this.settingsRepository.findFirst({
         where: {
@@ -739,7 +767,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         include: {
           Fallback: true,
         },
-      });
+      })
 
       if (!settings) {
         return {
@@ -757,7 +785,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           openaiIdFallback: null,
           speechToText: false,
           fallback: null,
-        };
+        }
       }
 
       return {
@@ -775,16 +803,16 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         openaiIdFallback: settings.openaiIdFallback,
         speechToText: settings.speechToText,
         fallback: settings.Fallback,
-      };
+      }
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error fetching default settings');
+      this.logger.error(error)
+      throw new Error('Error fetching default settings')
     }
   }
 
-  // Sessions
   public async changeStatus(instance: InstanceDto, data: any) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     try {
       const instanceId = await this.prismaRepository.instance
@@ -793,26 +821,26 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             name: instance.instanceName,
           },
         })
-        .then((instance) => instance.id);
+        .then((instance) => instance.id)
 
       const defaultSettingCheck = await this.settingsRepository.findFirst({
         where: {
           instanceId,
         },
-      });
+      })
 
-      const remoteJid = data.remoteJid;
-      const status = data.status;
+      const remoteJid = data.remoteJid
+      const status = data.status
 
       if (status === 'delete') {
         await this.sessionRepository.deleteMany({
           where: {
             remoteJid: remoteJid,
-            botId: { not: null },
+            botId: {not: null},
           },
-        });
+        })
 
-        return { openai: { remoteJid: remoteJid, status: status } };
+        return {openai: {remoteJid: remoteJid, status: status}}
       }
 
       if (status === 'closed') {
@@ -820,50 +848,57 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           await this.sessionRepository.updateMany({
             where: {
               remoteJid: remoteJid,
-              botId: { not: null },
-              status: { not: 'closed' },
+              botId: {not: null},
+              status: {not: 'closed'},
             },
             data: {
               status: 'closed',
             },
-          });
+          })
         } else {
           await this.sessionRepository.deleteMany({
             where: {
               remoteJid: remoteJid,
             },
-          });
+          })
         }
 
-        return { openai: { ...instance, openai: { remoteJid: remoteJid, status: status } } };
+        return {
+          openai: {...instance, openai: {remoteJid: remoteJid, status: status}},
+        }
       } else {
         const session = await this.sessionRepository.updateMany({
           where: {
             instanceId: instanceId,
             remoteJid: remoteJid,
-            botId: { not: null },
+            botId: {not: null},
           },
           data: {
             status: status,
           },
-        });
+        })
 
         const openaiData = {
           remoteJid: remoteJid,
           status: status,
           session,
-        };
+        }
 
-        return { openai: { ...instance, openai: openaiData } };
+        return {openai: {...instance, openai: openaiData}}
       }
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error changing status');
+      this.logger.error(error)
+      throw new Error('Error changing status')
     }
   }
 
-  public async fetchSessions(instance: InstanceDto, botId: string, remoteJid?: string) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+  public async fetchSessions(
+    instance: InstanceDto,
+    botId: string,
+    remoteJid?: string,
+  ) {
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     try {
       const instanceId = await this.prismaRepository.instance
@@ -872,34 +907,35 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             name: instance.instanceName,
           },
         })
-        .then((instance) => instance.id);
+        .then((instance) => instance.id)
 
       const openaiBot = await this.botRepository.findFirst({
         where: {
           id: botId,
         },
-      });
+      })
 
       if (openaiBot && openaiBot.instanceId !== instanceId) {
-        throw new Error('Openai Bot not found');
+        throw new Error('Openai Bot not found')
       }
 
       return await this.sessionRepository.findMany({
         where: {
           instanceId: instanceId,
           remoteJid,
-          botId: openaiBot ? botId : { not: null },
+          botId: openaiBot ? botId : {not: null},
           type: 'openai',
         },
-      });
+      })
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error fetching sessions');
+      this.logger.error(error)
+      throw new Error('Error fetching sessions')
     }
   }
 
   public async ignoreJid(instance: InstanceDto, data: IgnoreJidDto) {
-    if (!this.integrationEnabled) throw new BadRequestException('Openai is disabled');
+    if (!this.integrationEnabled)
+      throw new BadRequestException('Openai is disabled')
 
     try {
       const instanceId = await this.prismaRepository.instance
@@ -908,26 +944,26 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             name: instance.instanceName,
           },
         })
-        .then((instance) => instance.id);
+        .then((instance) => instance.id)
 
       const settings = await this.settingsRepository.findFirst({
         where: {
           instanceId: instanceId,
         },
-      });
+      })
 
       if (!settings) {
-        throw new Error('Settings not found');
+        throw new Error('Settings not found')
       }
 
-      let ignoreJids: any = settings?.ignoreJids || [];
+      let ignoreJids: any = settings?.ignoreJids || []
 
       if (data.action === 'add') {
-        if (ignoreJids.includes(data.remoteJid)) return { ignoreJids: ignoreJids };
+        if (ignoreJids.includes(data.remoteJid)) return {ignoreJids: ignoreJids}
 
-        ignoreJids.push(data.remoteJid);
+        ignoreJids.push(data.remoteJid)
       } else {
-        ignoreJids = ignoreJids.filter((jid) => jid !== data.remoteJid);
+        ignoreJids = ignoreJids.filter((jid) => jid !== data.remoteJid)
       }
 
       const updateSettings = await this.settingsRepository.update({
@@ -937,86 +973,100 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
         data: {
           ignoreJids: ignoreJids,
         },
-      });
+      })
 
       return {
         ignoreJids: updateSettings.ignoreJids,
-      };
+      }
     } catch (error) {
-      this.logger.error(error);
-      throw new Error('Error setting default settings');
+      this.logger.error(error)
+      throw new Error('Error setting default settings')
     }
   }
 
-  // Emit
-  public async emit({ instance, remoteJid, msg, pushName }: EmitData) {
-    if (!this.integrationEnabled) return;
+  public async emit({instance, remoteJid, msg, pushName}: EmitData) {
+    if (!this.integrationEnabled) return
 
     try {
       const settings = await this.settingsRepository.findFirst({
         where: {
           instanceId: instance.instanceId,
         },
-      });
+      })
 
-      if (this.checkIgnoreJids(settings?.ignoreJids, remoteJid)) return;
+      if (this.checkIgnoreJids(settings?.ignoreJids, remoteJid)) return
 
-      let session = await this.getSession(remoteJid, instance);
+      let session = await this.getSession(remoteJid, instance)
 
-      const content = getConversationMessage(msg);
+      const content = getConversationMessage(msg)
 
-      let findBot = (await this.findBotTrigger(this.botRepository, content, instance, session)) as OpenaiBot;
+      let findBot = (await this.findBotTrigger(
+        this.botRepository,
+        content,
+        instance,
+        session,
+      )) as OpenaiBot
 
       if (!findBot) {
         const fallback = await this.settingsRepository.findFirst({
           where: {
             instanceId: instance.instanceId,
           },
-        });
+        })
 
         if (fallback?.openaiIdFallback) {
           const findFallback = await this.botRepository.findFirst({
             where: {
               id: fallback.openaiIdFallback,
             },
-          });
+          })
 
-          findBot = findFallback;
+          findBot = findFallback
         } else {
-          return;
+          return
         }
       }
 
-      let expire = findBot?.expire;
-      let keywordFinish = findBot?.keywordFinish;
-      let delayMessage = findBot?.delayMessage;
-      let unknownMessage = findBot?.unknownMessage;
-      let listeningFromMe = findBot?.listeningFromMe;
-      let stopBotFromMe = findBot?.stopBotFromMe;
-      let keepOpen = findBot?.keepOpen;
-      let debounceTime = findBot?.debounceTime;
-      let ignoreJids = findBot?.ignoreJids;
-      let splitMessages = findBot?.splitMessages;
-      let timePerChar = findBot?.timePerChar;
+      let expire = findBot?.expire
+      let keywordFinish = findBot?.keywordFinish
+      let delayMessage = findBot?.delayMessage
+      let unknownMessage = findBot?.unknownMessage
+      let listeningFromMe = findBot?.listeningFromMe
+      let stopBotFromMe = findBot?.stopBotFromMe
+      let keepOpen = findBot?.keepOpen
+      let debounceTime = findBot?.debounceTime
+      let ignoreJids = findBot?.ignoreJids
+      let splitMessages = findBot?.splitMessages
+      let timePerChar = findBot?.timePerChar
 
-      if (expire === undefined || expire === null) expire = settings.expire;
-      if (keywordFinish === undefined || keywordFinish === null) keywordFinish = settings.keywordFinish;
-      if (delayMessage === undefined || delayMessage === null) delayMessage = settings.delayMessage;
-      if (unknownMessage === undefined || unknownMessage === null) unknownMessage = settings.unknownMessage;
-      if (listeningFromMe === undefined || listeningFromMe === null) listeningFromMe = settings.listeningFromMe;
-      if (stopBotFromMe === undefined || stopBotFromMe === null) stopBotFromMe = settings.stopBotFromMe;
-      if (keepOpen === undefined || keepOpen === null) keepOpen = settings.keepOpen;
-      if (debounceTime === undefined || debounceTime === null) debounceTime = settings.debounceTime;
-      if (ignoreJids === undefined || ignoreJids === null) ignoreJids = settings.ignoreJids;
-      if (splitMessages === undefined || splitMessages === null) splitMessages = settings?.splitMessages ?? false;
-      if (timePerChar === undefined || timePerChar === null) timePerChar = settings?.timePerChar ?? 0;
+      if (expire === undefined || expire === null) expire = settings.expire
+      if (keywordFinish === undefined || keywordFinish === null)
+        keywordFinish = settings.keywordFinish
+      if (delayMessage === undefined || delayMessage === null)
+        delayMessage = settings.delayMessage
+      if (unknownMessage === undefined || unknownMessage === null)
+        unknownMessage = settings.unknownMessage
+      if (listeningFromMe === undefined || listeningFromMe === null)
+        listeningFromMe = settings.listeningFromMe
+      if (stopBotFromMe === undefined || stopBotFromMe === null)
+        stopBotFromMe = settings.stopBotFromMe
+      if (keepOpen === undefined || keepOpen === null)
+        keepOpen = settings.keepOpen
+      if (debounceTime === undefined || debounceTime === null)
+        debounceTime = settings.debounceTime
+      if (ignoreJids === undefined || ignoreJids === null)
+        ignoreJids = settings.ignoreJids
+      if (splitMessages === undefined || splitMessages === null)
+        splitMessages = settings?.splitMessages ?? false
+      if (timePerChar === undefined || timePerChar === null)
+        timePerChar = settings?.timePerChar ?? 0
 
       const key = msg.key as {
-        id: string;
-        remoteJid: string;
-        fromMe: boolean;
-        participant: string;
-      };
+        id: string
+        remoteJid: string
+        fromMe: boolean
+        participant: string
+      }
 
       if (stopBotFromMe && key.fromMe && session) {
         session = await this.sessionRepository.update({
@@ -1026,70 +1076,76 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
           data: {
             status: 'paused',
           },
-        });
+        })
       }
 
       if (!listeningFromMe && key.fromMe) {
-        return;
+        return
       }
 
       if (session && !session.awaitUser) {
-        return;
+        return
       }
 
       if (debounceTime && debounceTime > 0) {
-        this.processDebounce(this.userMessageDebounce, content, remoteJid, debounceTime, async (debouncedContent) => {
-          if (findBot.botType === 'assistant') {
-            await this.openaiService.processOpenaiAssistant(
-              this.waMonitor.waInstances[instance.instanceName],
-              remoteJid,
-              pushName,
-              key.fromMe,
-              findBot,
-              session,
-              {
-                ...settings,
-                expire,
-                keywordFinish,
-                delayMessage,
-                unknownMessage,
-                listeningFromMe,
-                stopBotFromMe,
-                keepOpen,
-                debounceTime,
-                ignoreJids,
-                splitMessages,
-                timePerChar,
-              },
-              debouncedContent,
-            );
-          }
+        this.processDebounce(
+          this.userMessageDebounce,
+          content,
+          remoteJid,
+          debounceTime,
+          async (debouncedContent) => {
+            if (findBot.botType === 'assistant') {
+              await this.openaiService.processOpenaiAssistant(
+                this.waMonitor.waInstances[instance.instanceName],
+                remoteJid,
+                pushName,
+                key.fromMe,
+                findBot,
+                session,
+                {
+                  ...settings,
+                  expire,
+                  keywordFinish,
+                  delayMessage,
+                  unknownMessage,
+                  listeningFromMe,
+                  stopBotFromMe,
+                  keepOpen,
+                  debounceTime,
+                  ignoreJids,
+                  splitMessages,
+                  timePerChar,
+                },
+                debouncedContent,
+              )
+            }
 
-          if (findBot.botType === 'chatCompletion') {
-            await this.openaiService.processOpenaiChatCompletion(
-              this.waMonitor.waInstances[instance.instanceName],
-              remoteJid,
-              pushName,
-              findBot,
-              session,
-              {
-                ...settings,
-                expire,
-                keywordFinish,
-                delayMessage,
-                unknownMessage,
-                listeningFromMe,
-                stopBotFromMe,
-                keepOpen,
-                debounceTime,
-                ignoreJids,
-                splitMessages,
-                timePerChar,
-              },
-              debouncedContent,
-            );
-          }
-        });
+            if (findBot.botType === 'chatCompletion') {
+              await this.openaiService.processOpenaiChatCompletion(
+                this.waMonitor.waInstances[instance.instanceName],
+                remoteJid,
+                pushName,
+                findBot,
+                session,
+                {
+                  ...settings,
+                  expire,
+                  keywordFinish,
+                  delayMessage,
+                  unknownMessage,
+                  listeningFromMe,
+                  stopBotFromMe,
+                  keepOpen,
+                  debounceTime,
+                  ignoreJids,
+                  splitMessages,
+                  timePerChar,
+                },
+                debouncedContent,
+              )
+            }
+          },
+        )
       } else {
         if (findBot.botType === 'assistant') {
           await this.openaiService.processOpenaiAssistant(
@@ -1101,7 +1157,7 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             session,
             settings,
             content,
-          );
+          )
         }
 
         if (findBot.botType === 'chatCompletion') {
@@ -1113,14 +1169,14 @@ export class OpenaiController extends ChatbotController implements ChatbotContro
             session,
             settings,
             content,
-          );
+          )
         }
       }
 
-      return;
+      return
     } catch (error) {
-      this.logger.error(error);
-      return;
+      this.logger.error(error)
+      return
     }
   }
 }

@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { InstanceDto } from '@api/dto/instance.dto';
-import { PrismaRepository } from '@api/repository/repository.service';
-import { WAMonitoringService } from '@api/services/monitor.service';
-import { Integration } from '@api/types/wa.types';
-import { Auth, ConfigService, HttpServer } from '@config/env.config';
-import { Logger } from '@config/logger.config';
-import { Flowise, FlowiseSetting, IntegrationSession } from '@prisma/client';
-import { sendTelemetry } from '@utils/sendTelemetry';
-import axios from 'axios';
+import {InstanceDto} from '@api/dto/instance.dto'
+import {PrismaRepository} from '@api/repository/repository.service'
+import {WAMonitoringService} from '@api/services/monitor.service'
+import {Integration} from '@api/types/wa.types'
+import {Auth, ConfigService, HttpServer} from '@config/env.config'
+import {Logger} from '@config/logger.config'
+import {Flowise, FlowiseSetting, IntegrationSession} from '@prisma/client'
+import {sendTelemetry} from '@utils/sendTelemetry'
+import axios from 'axios'
 
 export class FlowiseService {
   constructor(
@@ -16,7 +16,7 @@ export class FlowiseService {
     private readonly prismaRepository: PrismaRepository,
   ) {}
 
-  private readonly logger = new Logger('FlowiseService');
+  private readonly logger = new Logger('FlowiseService')
 
   public async createNewSession(instance: InstanceDto, data: any) {
     try {
@@ -31,20 +31,26 @@ export class FlowiseService {
           instanceId: instance.instanceId,
           type: 'flowise',
         },
-      });
+      })
 
-      return { session };
+      return {session}
     } catch (error) {
-      this.logger.error(error);
-      return;
+      this.logger.error(error)
+      return
     }
   }
 
   private isImageMessage(content: string) {
-    return content.includes('imageMessage');
+    return content.includes('imageMessage')
   }
 
-  private async sendMessageToBot(instance: any, bot: Flowise, remoteJid: string, pushName: string, content: string) {
+  private async sendMessageToBot(
+    instance: any,
+    bot: Flowise,
+    remoteJid: string,
+    pushName: string,
+    content: string,
+  ) {
     const payload: any = {
       question: content,
       overrideConfig: {
@@ -57,10 +63,10 @@ export class FlowiseService {
           apiKey: this.configService.get<Auth>('AUTHENTICATION').API_KEY.KEY,
         },
       },
-    };
+    }
 
     if (this.isImageMessage(content)) {
-      const contentSplit = content.split('|');
+      const contentSplit = content.split('|')
 
       payload.uploads = [
         {
@@ -69,40 +75,40 @@ export class FlowiseService {
           name: 'Flowise.png',
           mime: 'image/png',
         },
-      ];
-      payload.question = contentSplit[2] || content;
+      ]
+      payload.question = contentSplit[2] || content
     }
 
     if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-      await instance.client.presenceSubscribe(remoteJid);
-      await instance.client.sendPresenceUpdate('composing', remoteJid);
+      await instance.client.presenceSubscribe(remoteJid)
+      await instance.client.sendPresenceUpdate('composing', remoteJid)
     }
 
     let headers: any = {
       'Content-Type': 'application/json',
-    };
+    }
 
     if (bot.apiKey) {
       headers = {
         ...headers,
         Authorization: `Bearer ${bot.apiKey}`,
-      };
+      }
     }
 
-    const endpoint = bot.apiUrl;
+    const endpoint = bot.apiUrl
 
-    if (!endpoint) return null;
+    if (!endpoint) return null
 
     const response = await axios.post(endpoint, payload, {
       headers,
-    });
+    })
 
     if (instance.integration === Integration.WHATSAPP_BAILEYS)
-      await instance.client.sendPresenceUpdate('paused', remoteJid);
+      await instance.client.sendPresenceUpdate('paused', remoteJid)
 
-    const message = response?.data?.text;
+    const message = response?.data?.text
 
-    return message;
+    return message
   }
 
   private async sendMessageWhatsApp(
@@ -112,54 +118,66 @@ export class FlowiseService {
     settings: FlowiseSetting,
     message: string,
   ) {
-    const linkRegex = /(!?)\[(.*?)\]\((.*?)\)/g;
+    const linkRegex = /(!?)\[(.*?)\]\((.*?)\)/g
 
-    let textBuffer = '';
-    let lastIndex = 0;
+    let textBuffer = ''
+    let lastIndex = 0
 
-    let match: RegExpExecArray | null;
+    let match: RegExpExecArray | null
 
     const getMediaType = (url: string): string | null => {
-      const extension = url.split('.').pop()?.toLowerCase();
-      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-      const audioExtensions = ['mp3', 'wav', 'aac', 'ogg'];
-      const videoExtensions = ['mp4', 'avi', 'mkv', 'mov'];
-      const documentExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+      const extension = url.split('.').pop()?.toLowerCase()
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+      const audioExtensions = ['mp3', 'wav', 'aac', 'ogg']
+      const videoExtensions = ['mp4', 'avi', 'mkv', 'mov']
+      const documentExtensions = [
+        'pdf',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
+        'txt',
+      ]
 
-      if (imageExtensions.includes(extension || '')) return 'image';
-      if (audioExtensions.includes(extension || '')) return 'audio';
-      if (videoExtensions.includes(extension || '')) return 'video';
-      if (documentExtensions.includes(extension || '')) return 'document';
-      return null;
-    };
+      if (imageExtensions.includes(extension || '')) return 'image'
+      if (audioExtensions.includes(extension || '')) return 'audio'
+      if (videoExtensions.includes(extension || '')) return 'video'
+      if (documentExtensions.includes(extension || '')) return 'document'
+      return null
+    }
 
     while ((match = linkRegex.exec(message)) !== null) {
-      const [fullMatch, exclMark, altText, url] = match;
-      const mediaType = getMediaType(url);
+      const [fullMatch, exclMark, altText, url] = match
+      const mediaType = getMediaType(url)
 
-      const beforeText = message.slice(lastIndex, match.index);
+      const beforeText = message.slice(lastIndex, match.index)
       if (beforeText) {
-        textBuffer += beforeText;
+        textBuffer += beforeText
       }
 
       if (mediaType) {
-        const splitMessages = settings.splitMessages ?? false;
-        const timePerChar = settings.timePerChar ?? 0;
-        const minDelay = 1000;
-        const maxDelay = 20000;
+        const splitMessages = settings.splitMessages ?? false
+        const timePerChar = settings.timePerChar ?? 0
+        const minDelay = 1000
+        const maxDelay = 20000
 
         if (textBuffer.trim()) {
           if (splitMessages) {
-            const multipleMessages = textBuffer.trim().split('\n\n');
+            const multipleMessages = textBuffer.trim().split('\n\n')
 
             for (let index = 0; index < multipleMessages.length; index++) {
-              const message = multipleMessages[index];
+              const message = multipleMessages[index]
 
-              const delay = Math.min(Math.max(message.length * timePerChar, minDelay), maxDelay);
+              const delay = Math.min(
+                Math.max(message.length * timePerChar, minDelay),
+                maxDelay,
+              )
 
               if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-                await instance.client.presenceSubscribe(remoteJid);
-                await instance.client.sendPresenceUpdate('composing', remoteJid);
+                await instance.client.presenceSubscribe(remoteJid)
+                await instance.client.sendPresenceUpdate('composing', remoteJid)
               }
 
               await new Promise<void>((resolve) => {
@@ -171,13 +189,13 @@ export class FlowiseService {
                       text: message,
                     },
                     false,
-                  );
-                  resolve();
-                }, delay);
-              });
+                  )
+                  resolve()
+                }, delay)
+              })
 
               if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-                await instance.client.sendPresenceUpdate('paused', remoteJid);
+                await instance.client.sendPresenceUpdate('paused', remoteJid)
               }
             }
           } else {
@@ -188,9 +206,9 @@ export class FlowiseService {
                 text: textBuffer.trim(),
               },
               false,
-            );
+            )
           }
-          textBuffer = '';
+          textBuffer = ''
         }
 
         if (mediaType === 'audio') {
@@ -199,7 +217,7 @@ export class FlowiseService {
             delay: settings?.delayMessage || 1000,
             audio: url,
             caption: altText,
-          });
+          })
         } else {
           await instance.mediaMessage(
             {
@@ -211,39 +229,42 @@ export class FlowiseService {
             },
             null,
             false,
-          );
+          )
         }
       } else {
-        textBuffer += `[${altText}](${url})`;
+        textBuffer += `[${altText}](${url})`
       }
 
-      lastIndex = linkRegex.lastIndex;
+      lastIndex = linkRegex.lastIndex
     }
 
     if (lastIndex < message.length) {
-      const remainingText = message.slice(lastIndex);
+      const remainingText = message.slice(lastIndex)
       if (remainingText.trim()) {
-        textBuffer += remainingText;
+        textBuffer += remainingText
       }
     }
 
-    const splitMessages = settings.splitMessages ?? false;
-    const timePerChar = settings.timePerChar ?? 0;
-    const minDelay = 1000;
-    const maxDelay = 20000;
+    const splitMessages = settings.splitMessages ?? false
+    const timePerChar = settings.timePerChar ?? 0
+    const minDelay = 1000
+    const maxDelay = 20000
 
     if (textBuffer.trim()) {
       if (splitMessages) {
-        const multipleMessages = textBuffer.trim().split('\n\n');
+        const multipleMessages = textBuffer.trim().split('\n\n')
 
         for (let index = 0; index < multipleMessages.length; index++) {
-          const message = multipleMessages[index];
+          const message = multipleMessages[index]
 
-          const delay = Math.min(Math.max(message.length * timePerChar, minDelay), maxDelay);
+          const delay = Math.min(
+            Math.max(message.length * timePerChar, minDelay),
+            maxDelay,
+          )
 
           if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-            await instance.client.presenceSubscribe(remoteJid);
-            await instance.client.sendPresenceUpdate('composing', remoteJid);
+            await instance.client.presenceSubscribe(remoteJid)
+            await instance.client.sendPresenceUpdate('composing', remoteJid)
           }
 
           await new Promise<void>((resolve) => {
@@ -255,13 +276,13 @@ export class FlowiseService {
                   text: message,
                 },
                 false,
-              );
-              resolve();
-            }, delay);
-          });
+              )
+              resolve()
+            }, delay)
+          })
 
           if (instance.integration === Integration.WHATSAPP_BAILEYS) {
-            await instance.client.sendPresenceUpdate('paused', remoteJid);
+            await instance.client.sendPresenceUpdate('paused', remoteJid)
           }
         }
       } else {
@@ -272,12 +293,12 @@ export class FlowiseService {
             text: textBuffer.trim(),
           },
           false,
-        );
+        )
       }
-      textBuffer = '';
+      textBuffer = ''
     }
 
-    sendTelemetry('/message/sendText');
+    sendTelemetry('/message/sendText')
 
     await this.prismaRepository.integrationSession.update({
       where: {
@@ -287,9 +308,9 @@ export class FlowiseService {
         status: 'opened',
         awaitUser: true,
       },
-    });
+    })
 
-    return;
+    return
   }
 
   private async initNewSession(
@@ -305,17 +326,29 @@ export class FlowiseService {
       remoteJid,
       pushName,
       botId: bot.id,
-    });
+    })
 
     if (data.session) {
-      session = data.session;
+      session = data.session
     }
 
-    const message = await this.sendMessageToBot(instance, bot, remoteJid, pushName, content);
+    const message = await this.sendMessageToBot(
+      instance,
+      bot,
+      remoteJid,
+      pushName,
+      content,
+    )
 
-    await this.sendMessageWhatsApp(instance, remoteJid, session, settings, message);
+    await this.sendMessageWhatsApp(
+      instance,
+      remoteJid,
+      session,
+      settings,
+      message,
+    )
 
-    return;
+    return
   }
 
   public async processBot(
@@ -328,17 +361,17 @@ export class FlowiseService {
     pushName?: string,
   ) {
     if (session && session.status !== 'opened') {
-      return;
+      return
     }
 
     if (session && settings.expire && settings.expire > 0) {
-      const now = Date.now();
+      const now = Date.now()
 
-      const sessionUpdatedAt = new Date(session.updatedAt).getTime();
+      const sessionUpdatedAt = new Date(session.updatedAt).getTime()
 
-      const diff = now - sessionUpdatedAt;
+      const diff = now - sessionUpdatedAt
 
-      const diffInMinutes = Math.floor(diff / 1000 / 60);
+      const diffInMinutes = Math.floor(diff / 1000 / 60)
 
       if (diffInMinutes > settings.expire) {
         if (settings.keepOpen) {
@@ -349,24 +382,40 @@ export class FlowiseService {
             data: {
               status: 'closed',
             },
-          });
+          })
         } else {
           await this.prismaRepository.integrationSession.deleteMany({
             where: {
               botId: bot.id,
               remoteJid: remoteJid,
             },
-          });
+          })
         }
 
-        await this.initNewSession(instance, remoteJid, bot, settings, session, content, pushName);
-        return;
+        await this.initNewSession(
+          instance,
+          remoteJid,
+          bot,
+          settings,
+          session,
+          content,
+          pushName,
+        )
+        return
       }
     }
 
     if (!session) {
-      await this.initNewSession(instance, remoteJid, bot, settings, session, content, pushName);
-      return;
+      await this.initNewSession(
+        instance,
+        remoteJid,
+        bot,
+        settings,
+        session,
+        content,
+        pushName,
+      )
+      return
     }
 
     await this.prismaRepository.integrationSession.update({
@@ -377,7 +426,7 @@ export class FlowiseService {
         status: 'opened',
         awaitUser: false,
       },
-    });
+    })
 
     if (!content) {
       if (settings.unknownMessage) {
@@ -388,14 +437,17 @@ export class FlowiseService {
             text: settings.unknownMessage,
           },
           false,
-        );
+        )
 
-        sendTelemetry('/message/sendText');
+        sendTelemetry('/message/sendText')
       }
-      return;
+      return
     }
 
-    if (settings.keywordFinish && content.toLowerCase() === settings.keywordFinish.toLowerCase()) {
+    if (
+      settings.keywordFinish &&
+      content.toLowerCase() === settings.keywordFinish.toLowerCase()
+    ) {
       if (settings.keepOpen) {
         await this.prismaRepository.integrationSession.update({
           where: {
@@ -404,22 +456,34 @@ export class FlowiseService {
           data: {
             status: 'closed',
           },
-        });
+        })
       } else {
         await this.prismaRepository.integrationSession.deleteMany({
           where: {
             botId: bot.id,
             remoteJid: remoteJid,
           },
-        });
+        })
       }
-      return;
+      return
     }
 
-    const message = await this.sendMessageToBot(instance, bot, remoteJid, pushName, content);
+    const message = await this.sendMessageToBot(
+      instance,
+      bot,
+      remoteJid,
+      pushName,
+      content,
+    )
 
-    await this.sendMessageWhatsApp(instance, remoteJid, session, settings, message);
+    await this.sendMessageWhatsApp(
+      instance,
+      remoteJid,
+      session,
+      settings,
+      message,
+    )
 
-    return;
+    return
   }
 }

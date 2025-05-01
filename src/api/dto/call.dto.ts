@@ -1,8 +1,8 @@
 export class Metadata {
-  number: string;
+  number: string
 }
 
 export class OfferCallDto extends Metadata {
-  isVideo?: boolean;
-  callDuration?: number;
+  isVideo?: boolean
+  callDuration?: number
 }

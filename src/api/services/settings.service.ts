@@ -1,31 +1,32 @@
-import { InstanceDto } from '@api/dto/instance.dto';
-import { SettingsDto } from '@api/dto/settings.dto';
-import { Logger } from '@config/logger.config';
+import {InstanceDto} from '@api/dto/instance.dto'
+import {SettingsDto} from '@api/dto/settings.dto'
+import {Logger} from '@config/logger.config'
 
-import { WAMonitoringService } from './monitor.service';
+import {WAMonitoringService} from './monitor.service'
 
 export class SettingsService {
   constructor(private readonly waMonitor: WAMonitoringService) {}
 
-  private readonly logger = new Logger('SettingsService');
+  private readonly logger = new Logger('SettingsService')
 
   public async create(instance: InstanceDto, data: SettingsDto) {
-    await this.waMonitor.waInstances[instance.instanceName].setSettings(data);
+    await this.waMonitor.waInstances[instance.instanceName].setSettings(data)
 
-    return { settings: { ...instance, settings: data } };
+    return {settings: {...instance, settings: data}}
   }
 
   public async find(instance: InstanceDto): Promise<SettingsDto> {
     try {
-      const result = await this.waMonitor.waInstances[instance.instanceName].findSettings();
+      const result =
+        await this.waMonitor.waInstances[instance.instanceName].findSettings()
 
       if (Object.keys(result).length === 0) {
-        throw new Error('Settings not found');
+        throw new Error('Settings not found')
       }
 
-      return result;
+      return result
     } catch (error) {
-      return null;
+      return null
     }
   }
 }

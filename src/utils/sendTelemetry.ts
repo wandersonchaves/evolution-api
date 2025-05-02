@@ -1,9 +1,7 @@
+import {getPackageJson} from '@root/shared/utils/getPackageJson'
 import axios from 'axios'
-import {readFileSync} from 'fs'
-import {join} from 'path'
 
-const packagePath = join(__dirname, '..', '..', 'package.json')
-const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'))
+const packageJson = getPackageJson()
 
 export interface TelemetryData {
   route: string

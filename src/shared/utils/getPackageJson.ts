@@ -1,7 +1,21 @@
-import {readFileSync} from 'fs'
+import {existsSync, readFileSync} from 'fs'
 import {join} from 'path'
 
 export const getPackageJson = () => {
-  const packagePath = join(__dirname, '..', '..', '..', 'package.json')
-  return JSON.parse(readFileSync(packagePath, 'utf8'))
+  try {
+    const pathOptions = [
+      join(__dirname, '..', '..', '..', 'package.json'),
+      join(__dirname, '..', '..', 'package.json'),
+    ]
+
+    for (const path of pathOptions) {
+      if (existsSync(path)) {
+        return JSON.parse(readFileSync(path, 'utf8'))
+      }
+    }
+
+    return {version: 'unknown'}
+  } catch {
+    return {version: 'unknown'}
+  }
 }

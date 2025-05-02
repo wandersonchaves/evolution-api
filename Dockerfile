@@ -23,7 +23,7 @@ COPY ./tsup.config.ts ./
 
 COPY ./Docker ./Docker
 
-RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
+RUN chmod +x ./Docker/scripts/*.sh && dos2unix ./Docker/scripts/*.sh
 
 ARG DATABASE_PROVIDER
 ARG DATABASE_CONNECTION_URI

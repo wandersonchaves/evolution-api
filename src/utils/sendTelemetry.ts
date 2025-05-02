@@ -1,7 +1,9 @@
 import axios from 'axios'
 import fs from 'fs'
+import {join} from 'path'
 
-const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+const packagePath = join(__dirname, '..', '..', 'package.json')
+const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
 
 export interface TelemetryData {
   route: string

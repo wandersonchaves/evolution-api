@@ -9,7 +9,7 @@ LABEL contact="contato@atendai.com"
 
 WORKDIR /evolution
 
-COPY ./package.json ./tsconfig.json ./
+COPY ./package.json ./tsconfig.json ./package-lock.json ./
 
 RUN npm install
 

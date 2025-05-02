@@ -1,8 +1,11 @@
 import dayjs from 'dayjs'
 import fs from 'fs'
+import {join} from 'path'
 
 import {configService, Log} from './env.config'
-const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+
+const packagePath = join(__dirname, '..', '..', 'package.json')
+const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
 
 const formatDateLog = (timestamp: number) =>
   dayjs(timestamp)

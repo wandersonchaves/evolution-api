@@ -1,19 +1,17 @@
 import '@utils/instrumentSentry'
 
 import {ProviderFiles} from '@api/provider/sessions'
-import {buildRouter, HttpStatus} from '@api/routes/index.router'
+import {buildRouter} from '@api/routes/index.router'
 import {eventManager, waMonitor} from '@api/server.module'
 import {
   Auth,
   configService,
   Cors,
   HttpServer,
-  ProviderSession,
   Webhook,
 } from '@config/env.config'
 import {onUnexpectedError} from '@config/error.config'
 import {Logger} from '@config/logger.config'
-import {ROOT_DIR} from '@config/path.config'
 import * as Sentry from '@sentry/node'
 import {ServerUP} from '@utils/server-up'
 import axios from 'axios'
@@ -30,7 +28,7 @@ import {join} from 'path'
 
 import {PrismaRepository} from './infrastructure/database/repositories/repository/repository.service'
 
-function initWA() {
+function initWhatsappInstances() {
   waMonitor.loadInstance()
 }
 
@@ -38,30 +36,32 @@ async function bootstrap() {
   const logger = new Logger('SERVER')
   const app = express()
 
-  let providerFiles: ProviderFiles = null
-  if (configService.get<ProviderSession>('PROVIDER').ENABLED) {
+  const providerConfig = configService.get('PROVIDER')
+  let providerFiles: ProviderFiles | null = null
+
+  if (providerConfig.ENABLED) {
     providerFiles = new ProviderFiles(configService)
     await providerFiles.onModuleInit()
-    logger.info('Provider:Files - ON')
+    logger.info('Provider Files initialized')
   }
 
   const prismaRepository = new PrismaRepository(configService)
   await prismaRepository.onModuleInit()
 
+  const corsConfig = configService.get<Cors>('CORS')
   app.use(
     cors({
       origin(requestOrigin, callback) {
-        const {ORIGIN} = configService.get<Cors>('CORS')
-        if (ORIGIN.includes('*')) {
-          return callback(null, true)
-        }
-        if (ORIGIN.indexOf(requestOrigin) !== -1) {
+        if (
+          corsConfig.ORIGIN.includes('*') ||
+          corsConfig.ORIGIN.includes(requestOrigin)
+        ) {
           return callback(null, true)
         }
         return callback(new Error('Not allowed by CORS'))
       },
-      methods: [...configService.get<Cors>('CORS').METHODS],
-      credentials: configService.get<Cors>('CORS').CREDENTIALS,
+      methods: corsConfig.METHODS,
+      credentials: corsConfig.CREDENTIALS,
     }),
     urlencoded({extended: true, limit: '136mb'}),
     json({limit: '136mb'}),
@@ -69,99 +69,86 @@ async function bootstrap() {
   )
 
   app.set('view engine', 'hbs')
-  app.set('views', join(ROOT_DIR, 'views'))
-  app.use(express.static(join(ROOT_DIR, 'public')))
-
-  app.use('/store', express.static(join(ROOT_DIR, 'store')))
+  app.set('views', join(process.cwd(), 'views'))
+  app.use(express.static(join(process.cwd(), 'public')))
+  app.use('/store', express.static(join(process.cwd(), 'store')))
 
   app.use('/', buildRouter())
 
-  app.use(
-    (err: Error, req: Request, res: Response, next: NextFunction) => {
-      if (err) {
-        const webhook = configService.get<Webhook>('WEBHOOK')
+  app.use(globalErrorHandler(logger))
+  app.use(notFoundHandler)
 
-        if (
-          webhook.EVENTS.ERRORS_WEBHOOK &&
-          webhook.EVENTS.ERRORS_WEBHOOK != '' &&
-          webhook.EVENTS.ERRORS
-        ) {
-          const tzoffset = new Date().getTimezoneOffset() * 60000 //offset in milliseconds
-          const localISOTime = new Date(Date.now() - tzoffset).toISOString()
-          const now = localISOTime
-          const globalApiKey =
-            configService.get<Auth>('AUTHENTICATION').API_KEY.KEY
-          const serverUrl = configService.get<HttpServer>('SERVER').URL
-
-          const errorData = {
-            event: 'error',
-            data: {
-              error: err['error'] || 'Internal Server Error',
-              message: err['message'] || 'Internal Server Error',
-              status: err['status'] || 500,
-              response: {
-                message: err['message'] || 'Internal Server Error',
-              },
-            },
-            date_time: now,
-            api_key: globalApiKey,
-            server_url: serverUrl,
-          }
-
-          logger.error(errorData)
-
-          const baseURL = webhook.EVENTS.ERRORS_WEBHOOK
-          const httpService = axios.create({baseURL})
-
-          httpService.post('', errorData)
-        }
-
-        return res.status(err['status'] || 500).json({
-          status: err['status'] || 500,
-          error: err['error'] || 'Internal Server Error',
-          response: {
-            message: err['message'] || 'Internal Server Error',
-          },
-        })
-      }
-
-      next()
-    },
-    (req: Request, res: Response, next: NextFunction) => {
-      const {method, url} = req
-
-      res.status(HttpStatus.NOT_FOUND).json({
-        status: HttpStatus.NOT_FOUND,
-        error: 'Not Found',
-        response: {
-          message: [`Cannot ${method.toUpperCase()} ${url}`],
-        },
-      })
-
-      next()
-    },
-  )
-
-  const httpServer = configService.get<HttpServer>('SERVER')
+  const serverConfig = configService.get<HttpServer>('SERVER')
+  const PORT = process.env.PORT || serverConfig.PORT
 
   ServerUP.app = app
-  const server = ServerUP[httpServer.TYPE]
-
+  const server = ServerUP[serverConfig.TYPE]
   eventManager.init(server)
 
   if (process.env.SENTRY_DSN) {
-    logger.info('Sentry - ON')
-
+    logger.info('Sentry Enabled')
     Sentry.setupExpressErrorHandler(app)
   }
 
-  server.listen(httpServer.PORT, () =>
-    logger.log(httpServer.TYPE.toUpperCase() + ' - ON: ' + httpServer.PORT),
+  server.listen(PORT, () =>
+    logger.log(
+      `${serverConfig.TYPE.toUpperCase()} - Listening on port ${PORT}`,
+    ),
   )
 
-  initWA()
-
+  initWhatsappInstances()
   onUnexpectedError()
+}
+
+function globalErrorHandler(logger: Logger) {
+  return async (err: Error, req: Request, res: Response) => {
+    const webhook = configService.get<Webhook>('WEBHOOK')
+    const auth = configService.get<Auth>('AUTHENTICATION')
+    const serverUrl = configService.get<HttpServer>('SERVER').URL
+    const timestamp = new Date().toISOString()
+
+    const errorData = {
+      event: 'error',
+      data: {
+        error: err['error'] || 'Internal Server Error',
+        message: err['message'] || 'Internal Server Error',
+        status: err['status'] || 500,
+        response: {
+          message: err['message'] || 'Internal Server Error',
+        },
+      },
+      date_time: timestamp,
+      api_key: auth.API_KEY.KEY,
+      server_url: serverUrl,
+    }
+
+    if (webhook.EVENTS.ERRORS_WEBHOOK && webhook.EVENTS.ERRORS) {
+      try {
+        logger.error(errorData)
+        const httpService = axios.create({
+          baseURL: webhook.EVENTS.ERRORS_WEBHOOK,
+        })
+        await httpService.post('', errorData)
+      } catch (sendError) {
+        logger.warn(
+          `Failed to send error webhook: ${sendError instanceof Error ? sendError.message : sendError}`,
+        )
+      }
+    }
+
+    res.status(err['status'] || 500).json(errorData)
+  }
+}
+
+function notFoundHandler(req: Request, res: Response, next: NextFunction) {
+  res.status(404).json({
+    status: 404,
+    error: 'Not Found',
+    response: {
+      message: [`Cannot ${req.method.toUpperCase()} ${req.originalUrl}`],
+    },
+  })
+  next()
 }
 
 bootstrap()

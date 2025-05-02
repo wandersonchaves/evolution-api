@@ -27,7 +27,7 @@ RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
 
 ENV DOCKER_ENV=true
 ARG DATABASE_PROVIDER
-ENV DATABASE_PROVIDER=${DATABASE_PROVIDER}
+ENV DATABASE_PROVIDER=postgresql
 RUN ./Docker/scripts/generate_database.sh
 
 RUN npm run build

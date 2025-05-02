@@ -6,7 +6,7 @@ if [ "$DOCKER_ENV" != "true" ]; then
     export_env_vars
 fi
 
-if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ]]; then
+if [ "$DATABASE_PROVIDER" = "postgresql" ] || [ "$DATABASE_PROVIDER" = "mysql" ]; then
     export DATABASE_CONNECTION_URI
     echo "Deploying migrations for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"

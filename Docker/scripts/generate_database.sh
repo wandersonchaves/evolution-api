@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 source ./Docker/scripts/env_functions.sh
 
@@ -6,18 +7,29 @@ if [ "$DOCKER_ENV" != "true" ]; then
     export_env_vars
 fi
 
+if [ -z "$DATABASE_PROVIDER" ]; then
+    echo "❌ DATABASE_PROVIDER not set."
+    exit 1
+fi
+
+if [ -z "$DATABASE_CONNECTION_URI" ]; then
+    echo "❌ DATABASE_CONNECTION_URI not set."
+    exit 1
+fi
+
 if [ "$DATABASE_PROVIDER" = "postgresql" ] || [ "$DATABASE_PROVIDER" = "mysql" ]; then
-    export DATABASE_CONNECTION_URI
-    echo "Generating database for $DATABASE_PROVIDER"
+    echo "🔁 Generating Prisma Client for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
-    npm run db:generate
-    if [ $? -ne 0 ]; then
-        echo "Prisma generate failed"
+
+    SCHEMA_FILE="./prisma/${DATABASE_PROVIDER}-schema.prisma"
+    if [ ! -f "$SCHEMA_FILE" ]; then
+        echo "❌ Schema file not found: $SCHEMA_FILE"
         exit 1
-    else
-        echo "Prisma generate succeeded"
     fi
+
+    npx prisma generate --schema="$SCHEMA_FILE"
+    echo "✅ Prisma generate succeeded"
 else
-    echo "Error: Database provider $DATABASE_PROVIDER invalid."
+    echo "❌ Invalid provider: $DATABASE_PROVIDER"
     exit 1
 fi

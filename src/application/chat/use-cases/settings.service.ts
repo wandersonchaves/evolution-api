@@ -1,6 +1,6 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {SettingsDto} from '@api/dto/settings.dto'
 import {Logger} from '@config/logger.config'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import type {SettingsDto} from '@root/interfaces/http/dtos/settings.dto'
 
 import {WAMonitoringService} from './monitor.service'
 

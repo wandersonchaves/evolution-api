@@ -1,7 +1,7 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {HttpStatus} from '@api/routes/index.router'
 import {baileysController} from '@api/server.module'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {instanceSchema} from '@validate/instance.schema'
 import {RequestHandler, Router} from 'express'
 

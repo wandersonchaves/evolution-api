@@ -1,5 +1,21 @@
-import {NumberBusiness} from '@api/dto/chat.dto'
+import * as s3Service from '@api/integrations/storage/s3/libs/minio.server'
+import {ProviderFiles} from '@api/provider/sessions'
+import {chatbotController} from '@api/server.module'
+import {Events, wa} from '@api/types/wa.types'
 import {
+  Chatwoot,
+  ConfigService,
+  Database,
+  Openai,
+  S3,
+  WaBusiness,
+} from '@config/env.config'
+import {BadRequestException, InternalServerErrorException} from '@exceptions'
+import type {CacheService} from '@root/application/chat/use-cases/cache.service'
+import {ChannelStartupService} from '@root/application/chat/use-cases/channel.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {NumberBusiness} from '@root/interfaces/http/dtos/chat.dto'
+import type {
   ContactMessage,
   MediaMessage,
   Options,
@@ -12,23 +28,7 @@ import {
   SendReactionDto,
   SendTemplateDto,
   SendTextDto,
-} from '@api/dto/sendMessage.dto'
-import * as s3Service from '@api/integrations/storage/s3/libs/minio.server'
-import {ProviderFiles} from '@api/provider/sessions'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {chatbotController} from '@api/server.module'
-import {CacheService} from '@api/services/cache.service'
-import {ChannelStartupService} from '@api/services/channel.service'
-import {Events, wa} from '@api/types/wa.types'
-import {
-  Chatwoot,
-  ConfigService,
-  Database,
-  Openai,
-  S3,
-  WaBusiness,
-} from '@config/env.config'
-import {BadRequestException, InternalServerErrorException} from '@exceptions'
+} from '@root/interfaces/http/dtos/sendMessage.dto'
 import {createJid} from '@utils/createJid'
 import {status} from '@utils/renderStatus'
 import axios from 'axios'

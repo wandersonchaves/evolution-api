@@ -100,15 +100,22 @@ export class AuthStateProvider {
     const creds: AuthenticationCreds =
       (await readData('creds')) || initAuthCreds()
 
+    type SignalDataValue<T extends keyof SignalDataTypeMap> =
+      SignalDataTypeMap[T]
+
     return {
       state: {
         creds,
         keys: {
-          get: async (type, ids: string[]) => {
-            const data: {[_: string]: SignalDataTypeMap[type]} = {}
+          get: async <T extends keyof SignalDataTypeMap>(
+            type: T,
+            ids: string[],
+          ): Promise<Record<string, SignalDataValue<T>>> => {
+            const data: Record<string, SignalDataValue<T>> = {}
             await Promise.all(
               ids.map(async (id) => {
                 let value = await readData(`${type}-${id}`)
+
                 if (type === 'app-state-sync-key' && value) {
                   value = proto.Message.AppStateSyncKeyData.fromObject(value)
                 }

@@ -1,9 +1,9 @@
-import {InstanceDto} from '@api/dto/instance.dto'
 import {MediaDto} from '@api/integrations/storage/s3/dto/media.dto'
 import {getObjectUrl} from '@api/integrations/storage/s3/libs/minio.server'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {Logger} from '@config/logger.config'
 import {BadRequestException} from '@exceptions'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 
 export class S3Service {
   constructor(private readonly prismaRepository: PrismaRepository) {}

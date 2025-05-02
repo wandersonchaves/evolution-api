@@ -1,6 +1,7 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {TemplateDto} from '@api/dto/template.dto'
-import {TemplateService} from '@api/services/template.service'
+import type {TemplateService} from '@root/application/chat/use-cases/template.service'
+
+import type {InstanceDto} from '../dtos/instance.dto'
+import type {TemplateDto} from '../dtos/template.dto'
 
 export class TemplateController {
   constructor(private readonly templateService: TemplateService) {}

@@ -1,6 +1,4 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {IgnoreJidDto} from '@api/dto/chatbot.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {
   OpenaiCredsDto,
   OpenaiDto,
@@ -8,6 +6,8 @@ import {
 } from '@api/integrations/chatbot/openai/dto/openai.dto'
 import {HttpStatus} from '@api/routes/index.router'
 import {openaiController} from '@api/server.module'
+import {IgnoreJidDto} from '@root/interfaces/http/dtos/chatbot.dto'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {
   instanceSchema,
   openaiCredsSchema,

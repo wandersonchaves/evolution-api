@@ -1,9 +1,9 @@
 import {EventDto} from '@api/integrations/event/event.dto'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
 import {wa} from '@api/types/wa.types'
 import {configService, Log, Pusher as ConfigPusher} from '@config/env.config'
 import {Logger} from '@config/logger.config'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
 import Pusher from 'pusher'
 
 import {

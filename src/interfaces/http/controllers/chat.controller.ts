@@ -1,4 +1,8 @@
-import {
+import {Contact, Message, MessageUpdate} from '@prisma/client'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {Query} from '@root/infrastructure/database/repositories/repository/repository.service'
+
+import type {
   ArchiveChatDto,
   BlockUserDto,
   DeleteMessage,
@@ -13,11 +17,8 @@ import {
   SendPresenceDto,
   UpdateMessageDto,
   WhatsAppNumberDto,
-} from '@api/dto/chat.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
-import {Query} from '@api/repository/repository.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
-import {Contact, Message, MessageUpdate} from '@prisma/client'
+} from '../dtos/chat.dto'
+import type {InstanceDto} from '../dtos/instance.dto'
 
 export class ChatController {
   constructor(private readonly waMonitor: WAMonitoringService) {}

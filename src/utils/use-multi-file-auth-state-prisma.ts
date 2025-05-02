@@ -1,6 +1,6 @@
 import {prismaRepository} from '@api/server.module'
-import {CacheService} from '@api/services/cache.service'
 import {INSTANCE_DIR} from '@config/path.config'
+import type {CacheService} from '@root/application/chat/use-cases/cache.service'
 import {
   AuthenticationState,
   BufferJSON,

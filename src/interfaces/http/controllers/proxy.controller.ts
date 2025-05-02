@@ -1,11 +1,12 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {ProxyDto} from '@api/dto/proxy.dto'
-import {WAMonitoringService} from '@api/services/monitor.service'
-import {ProxyService} from '@api/services/proxy.service'
 import {Logger} from '@config/logger.config'
 import {BadRequestException, NotFoundException} from '@exceptions'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {ProxyService} from '@root/application/chat/use-cases/proxy.service'
 import {makeProxyAgent} from '@utils/makeProxyAgent'
 import axios from 'axios'
+
+import type {InstanceDto} from '../dtos/instance.dto'
+import type {ProxyDto} from '../dtos/proxy.dto'
 
 const logger = new Logger('ProxyController')
 

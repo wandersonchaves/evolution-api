@@ -1,4 +1,5 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
+import {groupController} from '@api/server.module'
 import {
   AcceptGroupInvite,
   CreateGroupDto,
@@ -12,8 +13,7 @@ import {
   GroupToggleEphemeralDto,
   GroupUpdateParticipantDto,
   GroupUpdateSettingDto,
-} from '@api/dto/group.dto'
-import {groupController} from '@api/server.module'
+} from '@root/interfaces/http/dtos/group.dto'
 import {
   AcceptGroupInviteSchema,
   createGroupSchema,

@@ -1,16 +1,16 @@
-import {IgnoreJidDto} from '@api/dto/chatbot.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {
   OpenaiCredsDto,
   OpenaiDto,
 } from '@api/integrations/chatbot/openai/dto/openai.dto'
 import {OpenaiService} from '@api/integrations/chatbot/openai/services/openai.service'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
 import {configService, Openai} from '@config/env.config'
 import {Logger} from '@config/logger.config'
 import {BadRequestException} from '@exceptions'
 import {OpenaiBot} from '@prisma/client'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {IgnoreJidDto} from '@root/interfaces/http/dtos/chatbot.dto'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {getConversationMessage} from '@utils/getConversationMessage'
 import OpenAI from 'openai'
 

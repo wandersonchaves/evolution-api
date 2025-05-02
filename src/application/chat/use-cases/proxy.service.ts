@@ -1,7 +1,7 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {ProxyDto} from '@api/dto/proxy.dto'
 import {Logger} from '@config/logger.config'
 import {Proxy} from '@prisma/client'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import type {ProxyDto} from '@root/interfaces/http/dtos/proxy.dto'
 
 import {WAMonitoringService} from './monitor.service'
 

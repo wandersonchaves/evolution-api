@@ -1,7 +1,7 @@
 import {EventDto} from '@api/integrations/event/event.dto'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
 import {wa} from '@api/types/wa.types'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
 
 export type EmitData = {
   instanceName: string

@@ -1,4 +1,5 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
+import {sendMessageController} from '@api/server.module'
 import {
   SendAudioDto,
   SendButtonsDto,
@@ -13,8 +14,7 @@ import {
   SendStickerDto,
   SendTemplateDto,
   SendTextDto,
-} from '@api/dto/sendMessage.dto'
-import {sendMessageController} from '@api/server.module'
+} from '@root/interfaces/http/dtos/sendMessage.dto'
 import {
   audioMessageSchema,
   buttonsMessageSchema,

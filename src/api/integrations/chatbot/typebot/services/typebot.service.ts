@@ -1,5 +1,3 @@
-import {PrismaRepository} from '@api/repository/repository.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
 import {Auth, ConfigService, HttpServer, Typebot} from '@config/env.config'
 import {Logger} from '@config/logger.config'
 import {
@@ -8,6 +6,8 @@ import {
   Message,
   Typebot as TypebotModel,
 } from '@prisma/client'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
 import {getConversationMessage} from '@utils/getConversationMessage'
 import {sendTelemetry} from '@utils/sendTelemetry'
 import axios from 'axios'

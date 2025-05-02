@@ -1,4 +1,7 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
+import {chatController} from '@api/server.module'
+import {Contact, Message, MessageUpdate} from '@prisma/client'
+import {Query} from '@root/infrastructure/database/repositories/repository/repository.service'
 import {
   ArchiveChatDto,
   BlockUserDto,
@@ -14,11 +17,8 @@ import {
   SendPresenceDto,
   UpdateMessageDto,
   WhatsAppNumberDto,
-} from '@api/dto/chat.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
-import {Query} from '@api/repository/repository.service'
-import {chatController} from '@api/server.module'
-import {Contact, Message, MessageUpdate} from '@prisma/client'
+} from '@root/interfaces/http/dtos/chat.dto'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {
   archiveChatSchema,
   blockUserSchema,

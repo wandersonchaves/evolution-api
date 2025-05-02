@@ -1,8 +1,8 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {TemplateDto} from '@api/dto/template.dto'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {ConfigService, WaBusiness} from '@config/env.config'
 import {Logger} from '@config/logger.config'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import type {TemplateDto} from '@root/interfaces/http/dtos/template.dto'
 import axios from 'axios'
 
 import {WAMonitoringService} from './monitor.service'

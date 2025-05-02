@@ -1,6 +1,6 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {OfferCallDto} from '@api/dto/call.dto'
 import {callController} from '@api/server.module'
+import {OfferCallDto} from '@root/interfaces/http/dtos/call.dto'
 import {offerCallSchema} from '@validate/validate.schema'
 import {RequestHandler, Router} from 'express'
 

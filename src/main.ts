@@ -1,8 +1,7 @@
 import '@utils/instrumentSentry'
 
 import {ProviderFiles} from '@api/provider/sessions'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {HttpStatus, router} from '@api/routes/index.router'
+import {buildRouter, HttpStatus} from '@api/routes/index.router'
 import {eventManager, waMonitor} from '@api/server.module'
 import {
   Auth,
@@ -28,6 +27,8 @@ import express, {
   urlencoded,
 } from 'express'
 import {join} from 'path'
+
+import {PrismaRepository} from './infrastructure/database/repositories/repository/repository.service'
 
 function initWA() {
   waMonitor.loadInstance()
@@ -73,7 +74,7 @@ async function bootstrap() {
 
   app.use('/store', express.static(join(ROOT_DIR, 'store')))
 
-  app.use('/', router)
+  app.use('/', buildRouter())
 
   app.use(
     (err: Error, req: Request, res: Response, next: NextFunction) => {

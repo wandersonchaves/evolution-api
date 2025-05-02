@@ -1,4 +1,3 @@
-import {InstanceDto} from '@api/dto/instance.dto'
 import {cache, prismaRepository, waMonitor} from '@api/server.module'
 import {CacheConf, configService} from '@config/env.config'
 import {
@@ -7,6 +6,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@exceptions'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {NextFunction, Request, Response} from 'express'
 
 async function getInstance(instanceName: string) {

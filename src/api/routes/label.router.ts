@@ -1,6 +1,6 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {HandleLabelDto, LabelDto} from '@api/dto/label.dto'
 import {labelController} from '@api/server.module'
+import {HandleLabelDto, LabelDto} from '@root/interfaces/http/dtos/label.dto'
 import {handleLabelSchema} from '@validate/validate.schema'
 import {RequestHandler, Router} from 'express'
 

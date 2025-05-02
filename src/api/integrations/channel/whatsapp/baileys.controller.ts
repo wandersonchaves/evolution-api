@@ -1,5 +1,5 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {WAMonitoringService} from '@api/services/monitor.service'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 
 export class BaileysController {
   constructor(private readonly waMonitor: WAMonitoringService) {}

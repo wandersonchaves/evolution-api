@@ -1,8 +1,8 @@
-import {InstanceDto} from '@api/dto/instance.dto'
 import {prismaRepository} from '@api/server.module'
 import {Auth, configService, Database} from '@config/env.config'
 import {Logger} from '@config/logger.config'
 import {ForbiddenException, UnauthorizedException} from '@exceptions'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {NextFunction, Request, Response} from 'express'
 
 const logger = new Logger('GUARD')

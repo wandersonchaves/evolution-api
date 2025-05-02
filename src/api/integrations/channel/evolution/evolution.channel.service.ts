@@ -1,20 +1,20 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {
+import * as s3Service from '@api/integrations/storage/s3/libs/minio.server'
+import {chatbotController} from '@api/server.module'
+import {Events, wa} from '@api/types/wa.types'
+import {Chatwoot, ConfigService, Openai, S3} from '@config/env.config'
+import {BadRequestException, InternalServerErrorException} from '@exceptions'
+import type {CacheService} from '@root/application/chat/use-cases/cache.service'
+import {ChannelStartupService} from '@root/application/chat/use-cases/channel.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import type {
   MediaMessage,
   Options,
   SendAudioDto,
   SendButtonsDto,
   SendMediaDto,
   SendTextDto,
-} from '@api/dto/sendMessage.dto'
-import * as s3Service from '@api/integrations/storage/s3/libs/minio.server'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {chatbotController} from '@api/server.module'
-import {CacheService} from '@api/services/cache.service'
-import {ChannelStartupService} from '@api/services/channel.service'
-import {Events, wa} from '@api/types/wa.types'
-import {Chatwoot, ConfigService, Openai, S3} from '@config/env.config'
-import {BadRequestException, InternalServerErrorException} from '@exceptions'
+} from '@root/interfaces/http/dtos/sendMessage.dto'
 import {createJid} from '@utils/createJid'
 import axios from 'axios'
 import {isBase64, isURL} from 'class-validator'

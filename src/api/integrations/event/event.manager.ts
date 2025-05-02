@@ -3,8 +3,8 @@ import {RabbitmqController} from '@api/integrations/event/rabbitmq/rabbitmq.cont
 import {SqsController} from '@api/integrations/event/sqs/sqs.controller'
 import {WebhookController} from '@api/integrations/event/webhook/webhook.controller'
 import {WebsocketController} from '@api/integrations/event/websocket/websocket.controller'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
 import {Server} from 'http'
 
 export class EventManager {

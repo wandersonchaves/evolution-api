@@ -1,7 +1,10 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {InstanceDto, SetPresenceDto} from '@api/dto/instance.dto'
 import {instanceController} from '@api/server.module'
 import {ConfigService} from '@config/env.config'
+import {
+  InstanceDto,
+  SetPresenceDto,
+} from '@root/interfaces/http/dtos/instance.dto'
 import {instanceSchema, presenceOnlySchema} from '@validate/validate.schema'
 import {RequestHandler, Router} from 'express'
 

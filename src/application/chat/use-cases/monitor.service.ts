@@ -1,6 +1,4 @@
-import {InstanceDto} from '@api/dto/instance.dto'
 import {ProviderFiles} from '@api/provider/sessions'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {channelController} from '@api/server.module'
 import {Events, Integration} from '@api/types/wa.types'
 import {
@@ -14,6 +12,8 @@ import {
 import {Logger} from '@config/logger.config'
 import {INSTANCE_DIR, STORE_DIR} from '@config/path.config'
 import {NotFoundException} from '@exceptions'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {execSync} from 'child_process'
 import EventEmitter2 from 'eventemitter2'
 import {rmSync} from 'fs'
@@ -319,6 +319,8 @@ export class WAMonitoringService {
     })
 
     if (!instance) return
+
+    if (!instance || !('setInstance' in instance)) return
 
     instance.setInstance({
       instanceId: instanceData.instanceId,

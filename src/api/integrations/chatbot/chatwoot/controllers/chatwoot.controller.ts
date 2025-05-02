@@ -1,12 +1,12 @@
-import {InstanceDto} from '@api/dto/instance.dto'
 import {ChatwootDto} from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto'
 import {ChatwootService} from '@api/integrations/chatbot/chatwoot/services/chatwoot.service'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {waMonitor} from '@api/server.module'
-import {CacheService} from '@api/services/cache.service'
 import {CacheEngine} from '@cache/cacheengine'
 import {Chatwoot, ConfigService, HttpServer} from '@config/env.config'
 import {BadRequestException} from '@exceptions'
+import {CacheService} from '@root/application/chat/use-cases/cache.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {isURL} from 'class-validator'
 
 export class ChatwootController {

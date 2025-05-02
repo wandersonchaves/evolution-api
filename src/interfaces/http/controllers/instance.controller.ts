@@ -1,11 +1,6 @@
-import {InstanceDto, SetPresenceDto} from '@api/dto/instance.dto'
 import {ChatwootService} from '@api/integrations/chatbot/chatwoot/services/chatwoot.service'
 import {ProviderFiles} from '@api/provider/sessions'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {channelController, eventManager} from '@api/server.module'
-import {CacheService} from '@api/services/cache.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
-import {SettingsService} from '@api/services/settings.service'
 import {Events, Integration, wa} from '@api/types/wa.types'
 import {
   Auth,
@@ -20,11 +15,17 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@exceptions'
+import type {CacheService} from '@root/application/chat/use-cases/cache.service'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {SettingsService} from '@root/application/chat/use-cases/settings.service'
+import type {IInstanceService} from '@root/domain/messaging/IInstanceService'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
 import {delay} from 'baileys'
 import {isArray, isURL} from 'class-validator'
 import EventEmitter2 from 'eventemitter2'
 import {v4} from 'uuid'
 
+import type {InstanceDto, SetPresenceDto} from '../dtos/instance.dto'
 import {ProxyController} from './proxy.controller'
 
 export class InstanceController {
@@ -46,7 +47,7 @@ export class InstanceController {
 
   public async createInstance(instanceData: InstanceDto) {
     try {
-      const instance = channelController.init(instanceData, {
+      const rawInstance = channelController.init(instanceData, {
         configService: this.configService,
         eventEmitter: this.eventEmitter,
         prismaRepository: this.prismaRepository,
@@ -56,18 +57,16 @@ export class InstanceController {
         providerFiles: this.providerFiles,
       })
 
-      if (!instance) {
-        throw new BadRequestException('Invalid integration')
+      const instance = rawInstance as IInstanceService
+
+      if (!instance || typeof instance.setInstance !== 'function') {
+        throw new BadRequestException('Invalid integration instance')
       }
 
       const instanceId = v4()
-
       instanceData.instanceId = instanceId
 
-      let hash: string
-
-      if (!instanceData.token) hash = v4().toUpperCase()
-      else hash = instanceData.token
+      const hash = instanceData.token || v4().toUpperCase()
 
       await this.waMonitor.saveInstance({
         instanceId,
@@ -98,7 +97,7 @@ export class InstanceController {
 
       instance.sendDataWebhook(Events.INSTANCE_CREATE, {
         instanceName: instanceData.instanceName,
-        instanceId: instanceId,
+        instanceId,
       })
 
       if (

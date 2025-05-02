@@ -1,63 +1,7 @@
-import {OfferCallDto} from '@api/dto/call.dto'
-import {
-  ArchiveChatDto,
-  BlockUserDto,
-  DeleteMessage,
-  getBase64FromMediaMessageDto,
-  LastMessage,
-  MarkChatUnreadDto,
-  NumberBusiness,
-  OnWhatsAppDto,
-  PrivacySettingDto,
-  ReadMessageDto,
-  SendPresenceDto,
-  UpdateMessageDto,
-  WhatsAppNumberDto,
-} from '@api/dto/chat.dto'
-import {
-  AcceptGroupInvite,
-  CreateGroupDto,
-  GetParticipant,
-  GroupDescriptionDto,
-  GroupInvite,
-  GroupJid,
-  GroupPictureDto,
-  GroupSendInvite,
-  GroupSubjectDto,
-  GroupToggleEphemeralDto,
-  GroupUpdateParticipantDto,
-  GroupUpdateSettingDto,
-} from '@api/dto/group.dto'
-import {InstanceDto, SetPresenceDto} from '@api/dto/instance.dto'
-import {HandleLabelDto, LabelDto} from '@api/dto/label.dto'
-import {
-  Button,
-  ContactMessage,
-  KeyType,
-  MediaMessage,
-  Options,
-  SendAudioDto,
-  SendButtonsDto,
-  SendContactDto,
-  SendListDto,
-  SendLocationDto,
-  SendMediaDto,
-  SendPollDto,
-  SendPtvDto,
-  SendReactionDto,
-  SendStatusDto,
-  SendStickerDto,
-  SendTextDto,
-  StatusMessage,
-  TypeButton,
-} from '@api/dto/sendMessage.dto'
 import {chatwootImport} from '@api/integrations/chatbot/chatwoot/utils/chatwoot-import-helper'
 import * as s3Service from '@api/integrations/storage/s3/libs/minio.server'
 import {ProviderFiles} from '@api/provider/sessions'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {chatbotController, waMonitor} from '@api/server.module'
-import {CacheService} from '@api/services/cache.service'
-import {ChannelStartupService} from '@api/services/channel.service'
 import {Events, MessageSubtype, TypeMediaMessage, wa} from '@api/types/wa.types'
 import {CacheEngine} from '@cache/cacheengine'
 import {
@@ -82,6 +26,68 @@ import ffmpegPath from '@ffmpeg-installer/ffmpeg'
 import {Boom} from '@hapi/boom'
 import {createId as cuid} from '@paralleldrive/cuid2'
 import {Instance} from '@prisma/client'
+import {CacheService} from '@root/application/chat/use-cases/cache.service'
+import {ChannelStartupService} from '@root/application/chat/use-cases/channel.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {OfferCallDto} from '@root/interfaces/http/dtos/call.dto'
+import {
+  type ArchiveChatDto,
+  type BlockUserDto,
+  type DeleteMessage,
+  type getBase64FromMediaMessageDto,
+  type LastMessage,
+  type MarkChatUnreadDto,
+  type NumberBusiness,
+  OnWhatsAppDto,
+  type PrivacySettingDto,
+  type ReadMessageDto,
+  SendPresenceDto,
+  type UpdateMessageDto,
+  WhatsAppNumberDto,
+} from '@root/interfaces/http/dtos/chat.dto'
+import type {
+  AcceptGroupInvite,
+  CreateGroupDto,
+  GetParticipant,
+  GroupDescriptionDto,
+  GroupInvite,
+  GroupJid,
+  GroupPictureDto,
+  GroupSendInvite,
+  GroupSubjectDto,
+  GroupToggleEphemeralDto,
+  GroupUpdateParticipantDto,
+  GroupUpdateSettingDto,
+} from '@root/interfaces/http/dtos/group.dto'
+import type {
+  InstanceDto,
+  SetPresenceDto,
+} from '@root/interfaces/http/dtos/instance.dto'
+import type {
+  HandleLabelDto,
+  LabelDto,
+} from '@root/interfaces/http/dtos/label.dto'
+import type {
+  Button,
+  ContactMessage,
+  KeyType,
+  MediaMessage,
+  Options,
+  SendAudioDto,
+  SendButtonsDto,
+  SendContactDto,
+  SendListDto,
+  SendLocationDto,
+  SendMediaDto,
+  SendPollDto,
+  SendPtvDto,
+  SendReactionDto,
+  SendStatusDto,
+  SendStickerDto,
+  SendTextDto,
+  StatusMessage,
+  TypeButton,
+} from '@root/interfaces/http/dtos/sendMessage.dto'
 import {createJid} from '@utils/createJid'
 import {makeProxyAgent} from '@utils/makeProxyAgent'
 import {getOnWhatsappCache, saveOnWhatsappCache} from '@utils/onWhatsappCache'

@@ -1,6 +1,7 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {HandleLabelDto} from '@api/dto/label.dto'
-import {WAMonitoringService} from '@api/services/monitor.service'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+
+import type {InstanceDto} from '../dtos/instance.dto'
+import type {HandleLabelDto} from '../dtos/label.dto'
 
 export class LabelController {
   constructor(private readonly waMonitor: WAMonitoringService) {}

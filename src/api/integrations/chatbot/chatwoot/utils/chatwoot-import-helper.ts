@@ -1,4 +1,3 @@
-import {InstanceDto} from '@api/dto/instance.dto'
 import {ChatwootDto} from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto'
 import {postgresClient} from '@api/integrations/chatbot/chatwoot/libs/postgres.client'
 import {ChatwootService} from '@api/integrations/chatbot/chatwoot/services/chatwoot.service'
@@ -6,6 +5,7 @@ import {Chatwoot, configService} from '@config/env.config'
 import {Logger} from '@config/logger.config'
 import {inbox} from '@figuro/chatwoot-sdk'
 import {Chatwoot as ChatwootModel, Contact, Message} from '@prisma/client'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {proto} from 'baileys'
 
 type ChatwootUser = {

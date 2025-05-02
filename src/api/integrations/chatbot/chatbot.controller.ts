@@ -1,5 +1,3 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {PrismaRepository} from '@api/repository/repository.service'
 import {
   difyController,
   evolutionBotController,
@@ -7,9 +5,11 @@ import {
   openaiController,
   typebotController,
 } from '@api/server.module'
-import {WAMonitoringService} from '@api/services/monitor.service'
 import {Logger} from '@config/logger.config'
 import {IntegrationSession} from '@prisma/client'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {findBotByTrigger} from '@utils/findBotByTrigger'
 
 export type EmitData = {

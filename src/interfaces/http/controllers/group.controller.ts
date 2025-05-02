@@ -1,4 +1,6 @@
-import {
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+
+import type {
   AcceptGroupInvite,
   CreateGroupDto,
   GetParticipant,
@@ -11,9 +13,8 @@ import {
   GroupToggleEphemeralDto,
   GroupUpdateParticipantDto,
   GroupUpdateSettingDto,
-} from '@api/dto/group.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
-import {WAMonitoringService} from '@api/services/monitor.service'
+} from '../dtos/group.dto'
+import type {InstanceDto} from '../dtos/instance.dto'
 
 export class GroupController {
   constructor(private readonly waMonitor: WAMonitoringService) {}

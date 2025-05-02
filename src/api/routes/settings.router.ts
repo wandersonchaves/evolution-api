@@ -1,7 +1,7 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {InstanceDto} from '@api/dto/instance.dto'
-import {SettingsDto} from '@api/dto/settings.dto'
 import {settingsController} from '@api/server.module'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import {SettingsDto} from '@root/interfaces/http/dtos/settings.dto'
 import {settingsSchema} from '@validate/validate.schema'
 import {RequestHandler, Router} from 'express'
 

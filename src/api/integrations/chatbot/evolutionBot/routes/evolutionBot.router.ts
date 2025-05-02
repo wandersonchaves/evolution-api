@@ -1,8 +1,8 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {IgnoreJidDto} from '@api/dto/chatbot.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {HttpStatus} from '@api/routes/index.router'
 import {evolutionBotController} from '@api/server.module'
+import {IgnoreJidDto} from '@root/interfaces/http/dtos/chatbot.dto'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {instanceSchema} from '@validate/instance.schema'
 import {RequestHandler, Router} from 'express'
 

@@ -1,9 +1,12 @@
 import 'express-async-errors'
 
-import {GetParticipant, GroupInvite} from '@api/dto/group.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {Logger} from '@config/logger.config'
 import {BadRequestException} from '@exceptions'
+import type {
+  GetParticipant,
+  GroupInvite,
+} from '@root/interfaces/http/dtos/group.dto'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {Request} from 'express'
 import {JSONSchema7} from 'json-schema'
 import {validate} from 'jsonschema'

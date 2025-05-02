@@ -1,17 +1,3 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {
-  Options,
-  Quoted,
-  SendAudioDto,
-  SendMediaDto,
-  SendTextDto,
-} from '@api/dto/sendMessage.dto'
-import {ChatwootDto} from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto'
-import {postgresClient} from '@api/integrations/chatbot/chatwoot/libs/postgres.client'
-import {chatwootImport} from '@api/integrations/chatbot/chatwoot/utils/chatwoot-import-helper'
-import {PrismaRepository} from '@api/repository/repository.service'
-import {CacheService} from '@api/services/cache.service'
-import {WAMonitoringService} from '@api/services/monitor.service'
 import {Events} from '@api/types/wa.types'
 import {Chatwoot, ConfigService, Database, HttpServer} from '@config/env.config'
 import {Logger} from '@config/logger.config'
@@ -30,6 +16,17 @@ import {
   Contact as ContactModel,
   Message as MessageModel,
 } from '@prisma/client'
+import type {CacheService} from '@root/application/chat/use-cases/cache.service'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import type {
+  Options,
+  Quoted,
+  SendAudioDto,
+  SendMediaDto,
+  SendTextDto,
+} from '@root/interfaces/http/dtos/sendMessage.dto'
 import i18next from '@utils/i18n'
 import {sendTelemetry} from '@utils/sendTelemetry'
 import axios from 'axios'
@@ -41,6 +38,10 @@ import Long from 'long'
 import mimeTypes from 'mime-types'
 import path from 'path'
 import {Readable} from 'stream'
+
+import type {ChatwootDto} from '../dto/chatwoot.dto'
+import {postgresClient} from '../libs/postgres.client'
+import {chatwootImport} from '../utils/chatwoot-import-helper'
 
 interface ChatwootMessage {
   messageId?: number

@@ -1,6 +1,7 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {SettingsDto} from '@api/dto/settings.dto'
-import {SettingsService} from '@api/services/settings.service'
+import type {SettingsService} from '@root/application/chat/use-cases/settings.service'
+
+import type {InstanceDto} from '../dtos/instance.dto'
+import type {SettingsDto} from '../dtos/settings.dto'
 
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}

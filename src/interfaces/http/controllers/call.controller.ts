@@ -1,6 +1,7 @@
-import {OfferCallDto} from '@api/dto/call.dto'
-import {InstanceDto} from '@api/dto/instance.dto'
-import {WAMonitoringService} from '@api/services/monitor.service'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+
+import type {OfferCallDto} from '../dtos/call.dto'
+import type {InstanceDto} from '../dtos/instance.dto'
 
 export class CallController {
   constructor(private readonly waMonitor: WAMonitoringService) {}

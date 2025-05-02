@@ -1,8 +1,8 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {ChatwootDto} from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto'
 import {HttpStatus} from '@api/routes/index.router'
 import {chatwootController} from '@api/server.module'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {chatwootSchema, instanceSchema} from '@validate/validate.schema'
 import {RequestHandler, Router} from 'express'
 

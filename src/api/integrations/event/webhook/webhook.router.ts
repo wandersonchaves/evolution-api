@@ -1,9 +1,9 @@
 import {RouterBroker} from '@api/abstract/abstract.router'
-import {InstanceDto} from '@api/dto/instance.dto'
 import {EventDto} from '@api/integrations/event/event.dto'
 import {HttpStatus} from '@api/routes/index.router'
 import {eventManager} from '@api/server.module'
 import {ConfigService} from '@config/env.config'
+import {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import {instanceSchema, webhookSchema} from '@validate/validate.schema'
 import {RequestHandler, Router} from 'express'
 

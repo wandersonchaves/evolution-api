@@ -1,5 +1,9 @@
-import {InstanceDto} from '@api/dto/instance.dto'
-import {
+import {BadRequestException} from '@exceptions'
+import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
+import {isBase64, isURL} from 'class-validator'
+
+import type {InstanceDto} from '../dtos/instance.dto'
+import type {
   SendAudioDto,
   SendButtonsDto,
   SendContactDto,
@@ -13,10 +17,7 @@ import {
   SendStickerDto,
   SendTemplateDto,
   SendTextDto,
-} from '@api/dto/sendMessage.dto'
-import {WAMonitoringService} from '@api/services/monitor.service'
-import {BadRequestException} from '@exceptions'
-import {isBase64, isURL} from 'class-validator'
+} from '../dtos/sendMessage.dto'
 
 export class SendMessageController {
   constructor(private readonly waMonitor: WAMonitoringService) {}

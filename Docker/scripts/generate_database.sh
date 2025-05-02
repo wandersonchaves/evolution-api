@@ -21,7 +21,7 @@ if [ "$DATABASE_PROVIDER" = "postgresql" ] || [ "$DATABASE_PROVIDER" = "mysql" ]
     echo "🔁 Generating Prisma Client for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
 
-    SCHEMA_FILE="./prisma/${DATABASE_PROVIDER}-schema.prisma"
+    SCHEMA_FILE="./prisma/${DATABASE_PROVIDER}/${DATABASE_PROVIDER}-schema.prisma"
     if [ ! -f "$SCHEMA_FILE" ]; then
         echo "❌ Schema file not found: $SCHEMA_FILE"
         exit 1

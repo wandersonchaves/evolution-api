@@ -378,8 +378,7 @@ export class ConfigService {
         ENABLED: process.env?.RABBITMQ_ENABLED === 'true',
         GLOBAL_ENABLED: process.env?.RABBITMQ_GLOBAL_ENABLED === 'true',
         PREFIX_KEY: process.env?.RABBITMQ_PREFIX_KEY || 'evolution',
-        EXCHANGE_NAME:
-          process.env?.RABBITMQ_EXCHANGE_NAME || 'evolution_exchange',
+        EXCHANGE_NAME: process.env?.RABBITMQ_EXCHANGE_NAME || 'nextbot_api',
         URI: process.env.RABBITMQ_URI || '',
         EVENTS: {
           APPLICATION_STARTUP:
@@ -575,7 +574,7 @@ export class ConfigService {
         },
       },
       CONFIG_SESSION_PHONE: {
-        CLIENT: process.env?.CONFIG_SESSION_PHONE_CLIENT || 'Evolution API',
+        CLIENT: process.env?.CONFIG_SESSION_PHONE_CLIENT || 'NextBot API',
         NAME: process.env?.CONFIG_SESSION_PHONE_NAME || 'Chrome',
         VERSION: process.env?.CONFIG_SESSION_PHONE_VERSION || null,
       },

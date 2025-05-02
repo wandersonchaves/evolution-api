@@ -65,7 +65,7 @@ export function buildRouter(): Router {
     .get('/', (req, res) => {
       res.status(HttpStatus.OK).json({
         status: HttpStatus.OK,
-        message: 'Welcome to the Evolution API, it is working!',
+        message: 'Welcome to the NextBot API, it is working!',
         version: packageJson.version,
         clientName: process.env.DATABASE_CONNECTION_CLIENT_NAME,
         manager: !serverConfig.DISABLE_MANAGER

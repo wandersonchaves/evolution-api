@@ -27,7 +27,7 @@ export class EvolutionController
 
     if (!numberId) {
       this.logger.error(
-        'WebhookService -> receiveWebhookEvolution -> numberId not found',
+        'WebhookService -> receiveWebhookNextBot -> numberId not found',
       )
       return
     }

@@ -8,7 +8,7 @@ import type {PrismaRepository} from '@root/infrastructure/database/repositories/
 import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
 import EventEmitter2 from 'eventemitter2'
 
-import {EvolutionStartupService} from './evolution/evolution.channel.service'
+import {NextBotStartupService} from './evolution/evolution.channel.service'
 import {BusinessStartupService} from './meta/whatsapp.business.service'
 import {BaileysStartupService} from './whatsapp/whatsapp.baileys.service'
 
@@ -75,7 +75,7 @@ export class ChannelController {
     }
 
     if (instanceData.integration === Integration.EVOLUTION) {
-      return new EvolutionStartupService(
+      return new NextBotStartupService(
         data.configService,
         data.eventEmitter,
         data.prismaRepository,

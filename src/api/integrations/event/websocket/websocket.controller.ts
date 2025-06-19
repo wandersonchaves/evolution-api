@@ -1,86 +1,101 @@
-import {configService, Cors, Log, Websocket} from '@config/env.config'
-import {Logger} from '@config/logger.config'
-import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
-import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
-import {Server} from 'http'
-import {Server as SocketIO} from 'socket.io'
+import { PrismaRepository } from '@api/repository/repository.service';
+import { WAMonitoringService } from '@api/services/monitor.service';
+import { Auth, configService, Cors, Log, Websocket } from '@config/env.config';
+import { Logger } from '@config/logger.config';
+import { Server } from 'http';
+import { Server as SocketIO } from 'socket.io';
 
-import {
-  EmitData,
-  EventController,
-  EventControllerInterface,
-} from '../event.controller'
+import { EmitData, EventController, EventControllerInterface } from '../event.controller';
 
-export class WebsocketController
-  extends EventController
-  implements EventControllerInterface
-{
-  private io: SocketIO
-  private corsConfig: Array<any>
-  private readonly logger = new Logger('WebsocketController')
+export class WebsocketController extends EventController implements EventControllerInterface {
+  private io: SocketIO;
+  private corsConfig: Array<any>;
+  private readonly logger = new Logger('WebsocketController');
 
-  constructor(
-    prismaRepository: PrismaRepository,
-    waMonitor: WAMonitoringService,
-  ) {
-    super(
-      prismaRepository,
-      waMonitor,
-      configService.get<Websocket>('WEBSOCKET')?.ENABLED,
-      'websocket',
-    )
+  constructor(prismaRepository: PrismaRepository, waMonitor: WAMonitoringService) {
+    super(prismaRepository, waMonitor, configService.get<Websocket>('WEBSOCKET')?.ENABLED, 'websocket');
 
-    this.cors = configService.get<Cors>('CORS').ORIGIN
+    this.cors = configService.get<Cors>('CORS').ORIGIN;
   }
 
   public init(httpServer: Server): void {
     if (!this.status) {
-      return
+      return;
     }
 
     this.socket = new SocketIO(httpServer, {
-      cors: {
-        origin: this.cors,
+      cors: { origin: this.cors },
+      allowRequest: async (req, callback) => {
+        try {
+          const url = new URL(req.url || '', 'http://localhost');
+          const params = new URLSearchParams(url.search);
+
+          // Permite conexões internas do Socket.IO (EIO=4 é o Engine.IO v4)
+          if (params.has('EIO')) {
+            return callback(null, true);
+          }
+
+          const apiKey = params.get('apikey') || (req.headers.apikey as string);
+
+          if (!apiKey) {
+            this.logger.error('Connection rejected: apiKey not provided');
+            return callback('apiKey is required', false);
+          }
+
+          const instance = await this.prismaRepository.instance.findFirst({ where: { token: apiKey } });
+
+          if (!instance) {
+            const globalToken = configService.get<Auth>('AUTHENTICATION').API_KEY.KEY;
+            if (apiKey !== globalToken) {
+              this.logger.error('Connection rejected: invalid global token');
+              return callback('Invalid global token', false);
+            }
+          }
+
+          callback(null, true);
+        } catch (error) {
+          this.logger.error('Authentication error:');
+          this.logger.error(error);
+          callback('Authentication error', false);
+        }
       },
-    })
+    });
 
     this.socket.on('connection', (socket) => {
-      this.logger.info('User connected')
+      this.logger.info('User connected');
 
       socket.on('disconnect', () => {
-        this.logger.info('User disconnected')
-      })
+        this.logger.info('User disconnected');
+      });
 
       socket.on('sendNode', async (data) => {
         try {
-          await this.waMonitor.waInstances[data.instanceId].baileysSendNode(
-            data.stanza,
-          )
-          this.logger.info('Node sent successfully')
+          await this.waMonitor.waInstances[data.instanceId].baileysSendNode(data.stanza);
+          this.logger.info('Node sent successfully');
         } catch (error) {
-          this.logger.error('Error sending node:')
-          this.logger.error(error)
+          this.logger.error('Error sending node:');
+          this.logger.error(error);
         }
-      })
-    })
+      });
+    });
 
-    this.logger.info('Socket.io initialized')
+    this.logger.info('Socket.io initialized');
   }
 
   private set cors(cors: Array<any>) {
-    this.corsConfig = cors
+    this.corsConfig = cors;
   }
 
   private get cors(): string | Array<any> {
-    return this.corsConfig?.includes('*') ? '*' : this.corsConfig
+    return this.corsConfig?.includes('*') ? '*' : this.corsConfig;
   }
 
   private set socket(socket: SocketIO) {
-    this.io = socket
+    this.io = socket;
   }
 
   public get socket(): SocketIO {
-    return this.io
+    return this.io;
   }
 
   public async emit({
@@ -95,15 +110,15 @@ export class WebsocketController
     integration,
   }: EmitData): Promise<void> {
     if (integration && !integration.includes('websocket')) {
-      return
+      return;
     }
 
     if (!this.status) {
-      return
+      return;
     }
 
-    const configEv = event.replace(/[.-]/gm, '_').toUpperCase()
-    const logEnabled = configService.get<Log>('LOG').LEVEL.includes('WEBSOCKET')
+    const configEv = event.replace(/[.-]/gm, '_').toUpperCase();
+    const logEnabled = configService.get<Log>('LOG').LEVEL.includes('WEBSOCKET');
     const message = {
       event,
       instance: instanceName,
@@ -112,42 +127,33 @@ export class WebsocketController
       date_time: dateTime,
       sender,
       apikey: apiKey,
-    }
+    };
 
     if (configService.get<Websocket>('WEBSOCKET')?.GLOBAL_EVENTS) {
-      this.socket.emit(event, message)
+      this.socket.emit(event, message);
 
       if (logEnabled) {
-        this.logger.log({
-          local: `${origin}.sendData-WebsocketGlobal`,
-          ...message,
-        })
+        this.logger.log({ local: `${origin}.sendData-WebsocketGlobal`, ...message });
       }
     }
 
     try {
-      const instance = await this.get(instanceName)
+      const instance = await this.get(instanceName);
 
       if (!instance?.enabled) {
-        return
+        return;
       }
 
-      if (
-        Array.isArray(instance?.events) &&
-        instance?.events.includes(configEv)
-      ) {
-        this.socket.of(`/${instanceName}`).emit(event, message)
+      if (Array.isArray(instance?.events) && instance?.events.includes(configEv)) {
+        this.socket.of(`/${instanceName}`).emit(event, message);
 
         if (logEnabled) {
-          this.logger.log({
-            local: `${origin}.sendData-Websocket`,
-            ...message,
-          })
+          this.logger.log({ local: `${origin}.sendData-Websocket`, ...message });
         }
       }
     } catch (err) {
       if (logEnabled) {
-        this.logger.log(err)
+        this.logger.log(err);
       }
     }
   }

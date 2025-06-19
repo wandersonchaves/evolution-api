@@ -324,7 +324,7 @@ export abstract class BaseChatbotController<BotType = any, BotData extends BaseC
         ignoreJids: data.ignoreJids,
         splitMessages: data.splitMessages,
         timePerChar: data.timePerChar,
-        [fallbackFieldName]: data.fallbackId, // Use the correct field name dynamically
+        [fallbackFieldName]: data.fallbackId,
       };
 
       if (existingSettings) {

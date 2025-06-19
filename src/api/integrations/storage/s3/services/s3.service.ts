@@ -1,21 +1,21 @@
-import {MediaDto} from '@api/integrations/storage/s3/dto/media.dto'
-import {getObjectUrl} from '@api/integrations/storage/s3/libs/minio.server'
-import {Logger} from '@config/logger.config'
-import {BadRequestException} from '@exceptions'
-import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
-import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
+import { InstanceDto } from '@api/dto/instance.dto';
+import { MediaDto } from '@api/integrations/storage/s3/dto/media.dto';
+import { getObjectUrl } from '@api/integrations/storage/s3/libs/minio.server';
+import { PrismaRepository } from '@api/repository/repository.service';
+import { Logger } from '@config/logger.config';
+import { BadRequestException } from '@exceptions';
 
 export class S3Service {
   constructor(private readonly prismaRepository: PrismaRepository) {}
 
-  private readonly logger = new Logger('S3Service')
+  private readonly logger = new Logger('S3Service');
 
   public async getMedia(instance: InstanceDto, query?: MediaDto) {
     try {
       const where: any = {
         instanceId: instance.instanceId,
         ...query,
-      }
+      };
 
       const media = await this.prismaRepository.media.findMany({
         where,
@@ -27,24 +27,24 @@ export class S3Service {
           createdAt: true,
           Message: true,
         },
-      })
+      });
 
       if (!media || media.length === 0) {
-        throw 'Media not found'
+        throw 'Media not found';
       }
 
-      return media
+      return media;
     } catch (error) {
-      throw new BadRequestException(error)
+      throw new BadRequestException(error);
     }
   }
 
   public async getMediaUrl(instance: InstanceDto, data: MediaDto) {
-    const media = (await this.getMedia(instance, {id: data.id}))[0]
-    const mediaUrl = await getObjectUrl(media.fileName, data.expiry)
+    const media = (await this.getMedia(instance, { id: data.id }))[0];
+    const mediaUrl = await getObjectUrl(media.fileName, data.expiry);
     return {
       mediaUrl,
       ...media,
-    }
+    };
   }
 }

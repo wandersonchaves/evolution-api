@@ -39,9 +39,6 @@
       ],
       "@validate/*": [
         "./src/validate/*"
-      ],
-      "@root/*": [
-        "src/*"
       ]
     },
     "moduleResolution": "Node"
@@ -54,6 +51,7 @@
   ],
   "include": [
     "src/**/*",
-    "src/**/*.json"
+    "src/**/*.json",
+    "tsup.config.ts"
   ]
 }

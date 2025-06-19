@@ -47,4 +47,5 @@ lerna-debug.log*
 *.DS_Store
 .tool-versions
 
-/prisma/migrations/*
+/prisma/postgresql/migrations/*
+/prisma/mysql/migrations/*

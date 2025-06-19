@@ -1,13 +1,13 @@
-import {ChatwootDto} from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto'
-import {ChatwootService} from '@api/integrations/chatbot/chatwoot/services/chatwoot.service'
-import {waMonitor} from '@api/server.module'
-import {CacheEngine} from '@cache/cacheengine'
-import {Chatwoot, ConfigService, HttpServer} from '@config/env.config'
-import {BadRequestException} from '@exceptions'
-import {CacheService} from '@root/application/chat/use-cases/cache.service'
-import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
-import type {InstanceDto} from '@root/interfaces/http/dtos/instance.dto'
-import {isURL} from 'class-validator'
+import { InstanceDto } from '@api/dto/instance.dto';
+import { ChatwootDto } from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto';
+import { ChatwootService } from '@api/integrations/chatbot/chatwoot/services/chatwoot.service';
+import { PrismaRepository } from '@api/repository/repository.service';
+import { waMonitor } from '@api/server.module';
+import { CacheService } from '@api/services/cache.service';
+import { CacheEngine } from '@cache/cacheengine';
+import { Chatwoot, ConfigService, HttpServer } from '@config/env.config';
+import { BadRequestException } from '@exceptions';
+import { isURL } from 'class-validator';
 
 export class ChatwootController {
   constructor(
@@ -17,53 +17,49 @@ export class ChatwootController {
   ) {}
 
   public async createChatwoot(instance: InstanceDto, data: ChatwootDto) {
-    if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED)
-      throw new BadRequestException('Chatwoot is disabled')
+    if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED) throw new BadRequestException('Chatwoot is disabled');
 
     if (data?.enabled) {
-      if (!isURL(data.url, {require_tld: false})) {
-        throw new BadRequestException('url is not valid')
+      if (!isURL(data.url, { require_tld: false })) {
+        throw new BadRequestException('url is not valid');
       }
 
       if (!data.accountId) {
-        throw new BadRequestException('accountId is required')
+        throw new BadRequestException('accountId is required');
       }
 
       if (!data.token) {
-        throw new BadRequestException('token is required')
+        throw new BadRequestException('token is required');
       }
 
       if (data.signMsg !== true && data.signMsg !== false) {
-        throw new BadRequestException('signMsg is required')
+        throw new BadRequestException('signMsg is required');
       }
-      if (data.signMsg === false) data.signDelimiter = null
+      if (data.signMsg === false) data.signDelimiter = null;
     }
 
     if (!data.nameInbox || data.nameInbox === '') {
-      data.nameInbox = instance.instanceName
+      data.nameInbox = instance.instanceName;
     }
 
-    const result = await this.chatwootService.create(instance, data)
+    const result = await this.chatwootService.create(instance, data);
 
-    const urlServer = this.configService.get<HttpServer>('SERVER').URL
+    const urlServer = this.configService.get<HttpServer>('SERVER').URL;
 
     const response = {
       ...result,
       webhook_url: `${urlServer}/chatwoot/webhook/${encodeURIComponent(instance.instanceName)}`,
-    }
+    };
 
-    return response
+    return response;
   }
 
-  public async findChatwoot(
-    instance: InstanceDto,
-  ): Promise<ChatwootDto & {webhook_url: string}> {
-    if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED)
-      throw new BadRequestException('Chatwoot is disabled')
+  public async findChatwoot(instance: InstanceDto): Promise<ChatwootDto & { webhook_url: string }> {
+    if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED) throw new BadRequestException('Chatwoot is disabled');
 
-    const result = await this.chatwootService.find(instance)
+    const result = await this.chatwootService.find(instance);
 
-    const urlServer = this.configService.get<HttpServer>('SERVER').URL
+    const urlServer = this.configService.get<HttpServer>('SERVER').URL;
 
     if (Object.keys(result || {}).length === 0) {
       return {
@@ -74,31 +70,23 @@ export class ChatwootController {
         signMsg: false,
         nameInbox: '',
         webhook_url: '',
-      }
+      };
     }
 
     const response = {
       ...result,
       webhook_url: `${urlServer}/chatwoot/webhook/${encodeURIComponent(instance.instanceName)}`,
-    }
+    };
 
-    return response
+    return response;
   }
 
   public async receiveWebhook(instance: InstanceDto, data: any) {
-    if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED)
-      throw new BadRequestException('Chatwoot is disabled')
+    if (!this.configService.get<Chatwoot>('CHATWOOT').ENABLED) throw new BadRequestException('Chatwoot is disabled');
 
-    const chatwootCache = new CacheService(
-      new CacheEngine(this.configService, ChatwootService.name).getEngine(),
-    )
-    const chatwootService = new ChatwootService(
-      waMonitor,
-      this.configService,
-      this.prismaRepository,
-      chatwootCache,
-    )
+    const chatwootCache = new CacheService(new CacheEngine(this.configService, ChatwootService.name).getEngine());
+    const chatwootService = new ChatwootService(waMonitor, this.configService, this.prismaRepository, chatwootCache);
 
-    return chatwootService.receiveWebhook(instance, data)
+    return chatwootService.receiveWebhook(instance, data);
   }
 }

@@ -1,42 +1,32 @@
-import {EventDto} from '@api/integrations/event/event.dto'
-import {wa} from '@api/types/wa.types'
-import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
-import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
+import { EventDto } from '@api/integrations/event/event.dto';
+import { PrismaRepository } from '@api/repository/repository.service';
+import { WAMonitoringService } from '@api/services/monitor.service';
+import { wa } from '@api/types/wa.types';
 
 export type EmitData = {
-  instanceName: string
-  origin: string
-  event: string
-  data: any
-  serverUrl: string
-  dateTime: string
-  sender: string
-  apiKey?: string
-  local?: boolean
-  integration?: string[]
-}
+  instanceName: string;
+  origin: string;
+  event: string;
+  data: any;
+  serverUrl: string;
+  dateTime: string;
+  sender: string;
+  apiKey?: string;
+  local?: boolean;
+  integration?: string[];
+};
 
 export interface EventControllerInterface {
-  set(instanceName: string, data: any): Promise<any>
-  get(instanceName: string): Promise<any>
-  emit({
-    instanceName,
-    origin,
-    event,
-    data,
-    serverUrl,
-    dateTime,
-    sender,
-    apiKey,
-    local,
-  }: EmitData): Promise<void>
+  set(instanceName: string, data: any): Promise<any>;
+  get(instanceName: string): Promise<any>;
+  emit({ instanceName, origin, event, data, serverUrl, dateTime, sender, apiKey, local }: EmitData): Promise<void>;
 }
 
 export class EventController {
-  public prismaRepository: PrismaRepository
-  protected waMonitor: WAMonitoringService
-  private integrationStatus: boolean
-  private integrationName: string
+  public prismaRepository: PrismaRepository;
+  protected waMonitor: WAMonitoringService;
+  private integrationStatus: boolean;
+  private integrationName: string;
 
   constructor(
     prismaRepository: PrismaRepository,
@@ -44,57 +34,54 @@ export class EventController {
     integrationStatus: boolean,
     integrationName: string,
   ) {
-    this.prisma = prismaRepository
-    this.monitor = waMonitor
-    this.status = integrationStatus
-    this.name = integrationName
+    this.prisma = prismaRepository;
+    this.monitor = waMonitor;
+    this.status = integrationStatus;
+    this.name = integrationName;
   }
 
   public set prisma(prisma: PrismaRepository) {
-    this.prismaRepository = prisma
+    this.prismaRepository = prisma;
   }
 
   public get prisma() {
-    return this.prismaRepository
+    return this.prismaRepository;
   }
 
   public set monitor(waMonitor: WAMonitoringService) {
-    this.waMonitor = waMonitor
+    this.waMonitor = waMonitor;
   }
 
   public get monitor() {
-    return this.waMonitor
+    return this.waMonitor;
   }
 
   public set name(name: string) {
-    this.integrationName = name
+    this.integrationName = name;
   }
 
   public get name() {
-    return this.integrationName
+    return this.integrationName;
   }
 
   public set status(status: boolean) {
-    this.integrationStatus = status
+    this.integrationStatus = status;
   }
 
   public get status() {
-    return this.integrationStatus
+    return this.integrationStatus;
   }
 
-  public async set(
-    instanceName: string,
-    data: EventDto,
-  ): Promise<wa.LocalEvent> {
+  public async set(instanceName: string, data: EventDto): Promise<wa.LocalEvent> {
     if (!this.status) {
-      return
+      return;
     }
 
     if (!data[this.name]?.enabled) {
-      data[this.name].events = []
+      data[this.name].events = [];
     } else {
       if (0 === data[this.name].events.length) {
-        data[this.name].events = EventController.events
+        data[this.name].events = EventController.events;
       }
     }
 
@@ -111,29 +98,29 @@ export class EventController {
         events: data[this.name].events,
         instanceId: this.monitor.waInstances[instanceName].instanceId,
       },
-    })
+    });
   }
 
   public async get(instanceName: string): Promise<wa.LocalEvent> {
     if (!this.status) {
-      return
+      return;
     }
 
     if (undefined === this.monitor.waInstances[instanceName]) {
-      return null
+      return null;
     }
 
     const data = await this.prisma[this.name].findUnique({
       where: {
         instanceId: this.monitor.waInstances[instanceName].instanceId,
       },
-    })
+    });
 
     if (!data) {
-      return null
+      return null;
     }
 
-    return data
+    return data;
   }
 
   public static readonly events = [
@@ -145,6 +132,7 @@ export class EventController {
     'MESSAGES_UPDATE',
     'MESSAGES_DELETE',
     'SEND_MESSAGE',
+    'SEND_MESSAGE_UPDATE',
     'CONTACTS_SET',
     'CONTACTS_UPSERT',
     'CONTACTS_UPDATE',
@@ -164,5 +152,8 @@ export class EventController {
     'TYPEBOT_CHANGE_STATUS',
     'REMOVE_INSTANCE',
     'LOGOUT_INSTANCE',
-  ]
+    'INSTANCE_CREATE',
+    'INSTANCE_DELETE',
+    'STATUS_INSTANCE',
+  ];
 }

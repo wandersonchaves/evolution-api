@@ -5,7 +5,7 @@ services:
     container_name: minio
     image: quay.io/minio/minio
     networks:
-      - evolution-net
+      - nextbot-net
     command: server /data --console-address ":9001"
     restart: always
     ports:
@@ -26,6 +26,6 @@ volumes:
 
 
 networks:
-  evolution-net:
-    name: evolution-net
+  nextbot-net:
+    name: nextbot-net
     driver: bridge

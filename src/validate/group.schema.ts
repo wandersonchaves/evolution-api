@@ -1,33 +1,33 @@
-import {JSONSchema7} from 'json-schema'
-import {v4} from 'uuid'
+import { JSONSchema7 } from 'json-schema';
+import { v4 } from 'uuid';
 
 const isNotEmpty = (...propertyNames: string[]): JSONSchema7 => {
-  const properties = {}
+  const properties = {};
   propertyNames.forEach(
     (property) =>
       (properties[property] = {
         minLength: 1,
         description: `The "${property}" cannot be empty`,
       }),
-  )
+  );
   return {
     if: {
       propertyNames: {
         enum: [...propertyNames],
       },
     },
-    then: {properties},
-  }
-}
+    then: { properties },
+  };
+};
 
 export const createGroupSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    subject: {type: 'string'},
-    description: {type: 'string'},
-    profilePicture: {type: 'string'},
-    promoteParticipants: {type: 'boolean', enum: [true, false]},
+    subject: { type: 'string' },
+    description: { type: 'string' },
+    profilePicture: { type: 'string' },
+    promoteParticipants: { type: 'boolean', enum: [true, false] },
     participants: {
       type: 'array',
       minItems: 1,
@@ -42,34 +42,34 @@ export const createGroupSchema: JSONSchema7 = {
   },
   required: ['subject', 'participants'],
   ...isNotEmpty('subject', 'description', 'profilePicture'),
-}
+};
 
 export const groupJidSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string', pattern: '^[\\d-]+@g.us$'},
+    groupJid: { type: 'string', pattern: '^[\\d-]+@g.us$' },
   },
   required: ['groupJid'],
   ...isNotEmpty('groupJid'),
-}
+};
 
 export const getParticipantsSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    getParticipants: {type: 'string', enum: ['true', 'false']},
+    getParticipants: { type: 'string', enum: ['true', 'false'] },
   },
   required: ['getParticipants'],
   ...isNotEmpty('getParticipants'),
-}
+};
 
 export const groupSendInviteSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
-    description: {type: 'string'},
+    groupJid: { type: 'string' },
+    description: { type: 'string' },
     numbers: {
       type: 'array',
       minItems: 1,
@@ -84,33 +84,33 @@ export const groupSendInviteSchema: JSONSchema7 = {
   },
   required: ['groupJid', 'description', 'numbers'],
   ...isNotEmpty('groupJid', 'description', 'numbers'),
-}
+};
 
 export const groupInviteSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    inviteCode: {type: 'string', pattern: '^[a-zA-Z0-9]{22}$'},
+    inviteCode: { type: 'string', pattern: '^[a-zA-Z0-9]{22}$' },
   },
   required: ['inviteCode'],
   ...isNotEmpty('inviteCode'),
-}
+};
 
 export const AcceptGroupInviteSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    inviteCode: {type: 'string', pattern: '^[a-zA-Z0-9]{22}$'},
+    inviteCode: { type: 'string', pattern: '^[a-zA-Z0-9]{22}$' },
   },
   required: ['inviteCode'],
   ...isNotEmpty('inviteCode'),
-}
+};
 
 export const updateParticipantsSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
+    groupJid: { type: 'string' },
     action: {
       type: 'string',
       enum: ['add', 'remove', 'promote', 'demote'],
@@ -129,13 +129,13 @@ export const updateParticipantsSchema: JSONSchema7 = {
   },
   required: ['groupJid', 'action', 'participants'],
   ...isNotEmpty('groupJid', 'action'),
-}
+};
 
 export const updateSettingsSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
+    groupJid: { type: 'string' },
     action: {
       type: 'string',
       enum: ['announcement', 'not_announcement', 'locked', 'unlocked'],
@@ -143,13 +143,13 @@ export const updateSettingsSchema: JSONSchema7 = {
   },
   required: ['groupJid', 'action'],
   ...isNotEmpty('groupJid', 'action'),
-}
+};
 
 export const toggleEphemeralSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
+    groupJid: { type: 'string' },
     expiration: {
       type: 'number',
       enum: [0, 86400, 604800, 7776000],
@@ -157,37 +157,37 @@ export const toggleEphemeralSchema: JSONSchema7 = {
   },
   required: ['groupJid', 'expiration'],
   ...isNotEmpty('groupJid', 'expiration'),
-}
+};
 
 export const updateGroupPictureSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
-    image: {type: 'string'},
+    groupJid: { type: 'string' },
+    image: { type: 'string' },
   },
   required: ['groupJid', 'image'],
   ...isNotEmpty('groupJid', 'image'),
-}
+};
 
 export const updateGroupSubjectSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
-    subject: {type: 'string'},
+    groupJid: { type: 'string' },
+    subject: { type: 'string' },
   },
   required: ['groupJid', 'subject'],
   ...isNotEmpty('groupJid', 'subject'),
-}
+};
 
 export const updateGroupDescriptionSchema: JSONSchema7 = {
   $id: v4(),
   type: 'object',
   properties: {
-    groupJid: {type: 'string'},
-    description: {type: 'string'},
+    groupJid: { type: 'string' },
+    description: { type: 'string' },
   },
   required: ['groupJid', 'description'],
   ...isNotEmpty('groupJid', 'description'),
-}
+};

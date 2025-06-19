@@ -1,21 +1,5 @@
-import * as s3Service from '@api/integrations/storage/s3/libs/minio.server'
-import {ProviderFiles} from '@api/provider/sessions'
-import {chatbotController} from '@api/server.module'
-import {Events, wa} from '@api/types/wa.types'
+import { NumberBusiness } from '@api/dto/chat.dto';
 import {
-  Chatwoot,
-  ConfigService,
-  Database,
-  Openai,
-  S3,
-  WaBusiness,
-} from '@config/env.config'
-import {BadRequestException, InternalServerErrorException} from '@exceptions'
-import type {CacheService} from '@root/application/chat/use-cases/cache.service'
-import {ChannelStartupService} from '@root/application/chat/use-cases/channel.service'
-import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
-import type {NumberBusiness} from '@root/interfaces/http/dtos/chat.dto'
-import type {
   ContactMessage,
   MediaMessage,
   Options,
@@ -28,16 +12,24 @@ import type {
   SendReactionDto,
   SendTemplateDto,
   SendTextDto,
-} from '@root/interfaces/http/dtos/sendMessage.dto'
-import {createJid} from '@utils/createJid'
-import {status} from '@utils/renderStatus'
-import axios from 'axios'
-import {arrayUnique, isURL} from 'class-validator'
-import EventEmitter2 from 'eventemitter2'
-import FormData from 'form-data'
-import {createReadStream} from 'fs'
-import mimeTypes from 'mime-types'
-import {join} from 'path'
+} from '@api/dto/sendMessage.dto';
+import * as s3Service from '@api/integrations/storage/s3/libs/minio.server';
+import { ProviderFiles } from '@api/provider/sessions';
+import { PrismaRepository } from '@api/repository/repository.service';
+import { chatbotController } from '@api/server.module';
+import { CacheService } from '@api/services/cache.service';
+import { ChannelStartupService } from '@api/services/channel.service';
+import { Events, wa } from '@api/types/wa.types';
+import { Chatwoot, ConfigService, Database, Openai, S3, WaBusiness } from '@config/env.config';
+import { BadRequestException, InternalServerErrorException } from '@exceptions';
+import { createJid } from '@utils/createJid';
+import { status } from '@utils/renderStatus';
+import axios from 'axios';
+import { arrayUnique, isURL } from 'class-validator';
+import EventEmitter2 from 'eventemitter2';
+import FormData from 'form-data';
+import mimeTypes from 'mime-types';
+import { join } from 'path';
 
 export class BusinessStartupService extends ChannelStartupService {
   constructor(
@@ -49,20 +41,20 @@ export class BusinessStartupService extends ChannelStartupService {
     public readonly baileysCache: CacheService,
     private readonly providerFiles: ProviderFiles,
   ) {
-    super(configService, eventEmitter, prismaRepository, chatwootCache)
+    super(configService, eventEmitter, prismaRepository, chatwootCache);
   }
 
-  public stateConnection: wa.StateConnection = {state: 'open'}
+  public stateConnection: wa.StateConnection = { state: 'open' };
 
-  public phoneNumber: string
-  public mobile: boolean
+  public phoneNumber: string;
+  public mobile: boolean;
 
   public get connectionStatus() {
-    return this.stateConnection
+    return this.stateConnection;
   }
 
   public async closeClient() {
-    this.stateConnection = {state: 'close'}
+    this.stateConnection = { state: 'close' };
   }
 
   public get qrCode(): wa.QrCode {
@@ -71,52 +63,49 @@ export class BusinessStartupService extends ChannelStartupService {
       code: this.instance.qrcode?.code,
       base64: this.instance.qrcode?.base64,
       count: this.instance.qrcode?.count,
-    }
+    };
   }
 
   public async logoutInstance() {
-    await this.closeClient()
+    await this.closeClient();
   }
 
   private isMediaMessage(message: any) {
-    return message.document || message.image || message.audio || message.video
+    return message.document || message.image || message.audio || message.video;
   }
 
   private async post(message: any, params: string) {
     try {
-      let urlServer = this.configService.get<WaBusiness>('WA_BUSINESS').URL
-      const version = this.configService.get<WaBusiness>('WA_BUSINESS').VERSION
-      urlServer = `${urlServer}/${version}/${this.number}/${params}`
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.token}`,
-      }
-      const result = await axios.post(urlServer, message, {headers})
-      return result.data
+      let urlServer = this.configService.get<WaBusiness>('WA_BUSINESS').URL;
+      const version = this.configService.get<WaBusiness>('WA_BUSINESS').VERSION;
+      urlServer = `${urlServer}/${version}/${this.number}/${params}`;
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${this.token}` };
+      const result = await axios.post(urlServer, message, { headers });
+      return result.data;
     } catch (e) {
-      return e.response?.data?.error
+      return e.response?.data?.error;
     }
   }
 
   public async profilePicture(number: string) {
-    const jid = createJid(number)
+    const jid = createJid(number);
 
     return {
       wuid: jid,
       profilePictureUrl: null,
-    }
+    };
   }
 
   public async getProfileName() {
-    return null
+    return null;
   }
 
   public async profilePictureUrl() {
-    return null
+    return null;
   }
 
   public async getProfileStatus() {
-    return null
+    return null;
   }
 
   public async setWhatsappBusinessProfile(data: NumberBusiness): Promise<any> {
@@ -129,84 +118,91 @@ export class BusinessStartupService extends ChannelStartupService {
       email: data.email,
       websites: data.websites,
       profile_picture_handle: data.profilehandle,
-    }
-    return await this.post(content, 'whatsapp_business_profile')
+    };
+    return await this.post(content, 'whatsapp_business_profile');
   }
 
   public async connectToWhatsapp(data?: any): Promise<any> {
-    if (!data) return
+    if (!data) return;
 
-    const content = data.entry[0].changes[0].value
+    const content = data.entry[0].changes[0].value;
 
     try {
-      this.loadChatwoot()
+      this.loadChatwoot();
 
-      this.eventHandler(content)
+      this.eventHandler(content);
 
-      this.phoneNumber = createJid(
-        content.messages
-          ? content.messages[0].from
-          : content.statuses[0]?.recipient_id,
-      )
+      this.phoneNumber = createJid(content.messages ? content.messages[0].from : content.statuses[0]?.recipient_id);
     } catch (error) {
-      this.logger.error(error)
-      throw new InternalServerErrorException(error?.toString())
+      this.logger.error(error);
+      throw new InternalServerErrorException(error?.toString());
     }
   }
 
   private async downloadMediaMessage(message: any) {
     try {
-      const id = message[message.type].id
-      let urlServer = this.configService.get<WaBusiness>('WA_BUSINESS').URL
-      const version = this.configService.get<WaBusiness>('WA_BUSINESS').VERSION
-      urlServer = `${urlServer}/${version}/${id}`
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.token}`,
-      }
-      let result = await axios.get(urlServer, {headers})
+      const id = message[message.type].id;
+      let urlServer = this.configService.get<WaBusiness>('WA_BUSINESS').URL;
+      const version = this.configService.get<WaBusiness>('WA_BUSINESS').VERSION;
+      urlServer = `${urlServer}/${version}/${id}`;
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${this.token}` };
+
+      // Primeiro, obtenha a URL do arquivo
+      let result = await axios.get(urlServer, { headers });
+
+      // Depois, baixe o arquivo usando a URL retornada
       result = await axios.get(result.data.url, {
-        headers,
+        headers: { Authorization: `Bearer ${this.token}` },
         responseType: 'arraybuffer',
-      })
-      return result.data
+      });
+
+      return result.data;
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error(`Error downloading media: ${e}`);
+      throw e;
     }
   }
 
   private messageMediaJson(received: any) {
-    const message = received.messages[0]
-    let content: any = message.type + 'Message'
-    content = {[content]: message[message.type]}
-    message.context
-      ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-      : content
-    return content
+    const message = received.messages[0];
+    let content: any = message.type + 'Message';
+    content = { [content]: message[message.type] };
+    if (message.context) {
+      content = { ...content, contextInfo: { stanzaId: message.context.id } };
+    }
+    return content;
+  }
+
+  private messageAudioJson(received: any) {
+    const message = received.messages[0];
+    let content: any = {
+      audioMessage: {
+        ...message.audio,
+        ptt: message.audio.voice || false,
+      },
+    };
+    if (message.context) {
+      content = { ...content, contextInfo: { stanzaId: message.context.id } };
+    }
+    return content;
   }
 
   private messageInteractiveJson(received: any) {
-    const message = received.messages[0]
-    let content: any = {
-      conversation: message.interactive[message.interactive.type].title,
-    }
-    message.context
-      ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-      : content
-    return content
+    const message = received.messages[0];
+    let content: any = { conversation: message.interactive[message.interactive.type].title };
+    message.context ? (content = { ...content, contextInfo: { stanzaId: message.context.id } }) : content;
+    return content;
   }
 
   private messageButtonJson(received: any) {
-    const message = received.messages[0]
-    let content: any = {conversation: received.messages[0].button?.text}
-    message.context
-      ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-      : content
-    return content
+    const message = received.messages[0];
+    let content: any = { conversation: received.messages[0].button?.text };
+    message.context ? (content = { ...content, contextInfo: { stanzaId: message.context.id } }) : content;
+    return content;
   }
 
   private messageReactionJson(received: any) {
-    const message = received.messages[0]
+    const message = received.messages[0];
     let content: any = {
       reactionMessage: {
         key: {
@@ -214,72 +210,126 @@ export class BusinessStartupService extends ChannelStartupService {
         },
         text: message.reaction.emoji,
       },
-    }
-    message.context
-      ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-      : content
-    return content
+    };
+    message.context ? (content = { ...content, contextInfo: { stanzaId: message.context.id } }) : content;
+    return content;
   }
 
   private messageTextJson(received: any) {
-    let content: any
-    const message = received.messages[0]
+    // Verificar que received y received.messages existen
+    if (!received || !received.messages || received.messages.length === 0) {
+      this.logger.error('Error: received object or messages array is undefined or empty');
+      return null;
+    }
+
+    const message = received.messages[0];
+    let content: any;
+
+    // Verificar si es un mensaje de tipo sticker, location u otro tipo que no tiene text
+    if (!message.text) {
+      // Si no hay texto, manejamos diferente según el tipo de mensaje
+      if (message.type === 'sticker') {
+        content = { stickerMessage: {} };
+      } else if (message.type === 'location') {
+        content = {
+          locationMessage: {
+            degreesLatitude: message.location?.latitude,
+            degreesLongitude: message.location?.longitude,
+            name: message.location?.name,
+            address: message.location?.address,
+          },
+        };
+      } else {
+        // Para otros tipos de mensajes sin texto, creamos un contenido genérico
+        this.logger.log(`Mensaje de tipo ${message.type} sin campo text`);
+        content = { [message.type + 'Message']: message[message.type] || {} };
+      }
+
+      // Añadir contexto si existe
+      if (message.context) {
+        content = { ...content, contextInfo: { stanzaId: message.context.id } };
+      }
+
+      return content;
+    }
+
+    // Si el mensaje tiene texto, procesamos normalmente
+    if (!received.metadata || !received.metadata.phone_number_id) {
+      this.logger.error('Error: metadata or phone_number_id is undefined');
+      return null;
+    }
+
     if (message.from === received.metadata.phone_number_id) {
       content = {
-        extendedTextMessage: {text: message.text.body},
+        extendedTextMessage: { text: message.text.body },
+      };
+      if (message.context) {
+        content = { ...content, contextInfo: { stanzaId: message.context.id } };
       }
-      message.context
-        ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-        : content
     } else {
-      content = {conversation: message.text.body}
-      message.context
-        ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-        : content
+      content = { conversation: message.text.body };
+      if (message.context) {
+        content = { ...content, contextInfo: { stanzaId: message.context.id } };
+      }
     }
-    return content
+
+    return content;
+  }
+
+  private messageLocationJson(received: any) {
+    const message = received.messages[0];
+    let content: any = {
+      locationMessage: {
+        degreesLatitude: message.location.latitude,
+        degreesLongitude: message.location.longitude,
+        name: message.location?.name,
+        address: message.location?.address,
+      },
+    };
+    message.context ? (content = { ...content, contextInfo: { stanzaId: message.context.id } }) : content;
+    return content;
   }
 
   private messageContactsJson(received: any) {
-    const message = received.messages[0]
-    let content: any = {}
+    const message = received.messages[0];
+    let content: any = {};
 
     const vcard = (contact: any) => {
       let result =
         'BEGIN:VCARD\n' +
         'VERSION:3.0\n' +
         `N:${contact.name.formatted_name}\n` +
-        `FN:${contact.name.formatted_name}\n`
+        `FN:${contact.name.formatted_name}\n`;
 
       if (contact.org) {
-        result += `ORG:${contact.org.company};\n`
+        result += `ORG:${contact.org.company};\n`;
       }
 
       if (contact.emails) {
-        result += `EMAIL:${contact.emails[0].email}\n`
+        result += `EMAIL:${contact.emails[0].email}\n`;
       }
 
       if (contact.urls) {
-        result += `URL:${contact.urls[0].url}\n`
+        result += `URL:${contact.urls[0].url}\n`;
       }
 
       if (!contact.phones[0]?.wa_id) {
-        contact.phones[0].wa_id = createJid(contact.phones[0].phone)
+        contact.phones[0].wa_id = createJid(contact.phones[0].phone);
       }
 
       result +=
         `item1.TEL;waid=${contact.phones[0]?.wa_id}:${contact.phones[0].phone}\n` +
         'item1.X-ABLabel:Celular\n' +
-        'END:VCARD'
+        'END:VCARD';
 
-      return result
-    }
+      return result;
+    };
 
     if (message.contacts.length === 1) {
       content.contactMessage = {
         displayName: message.contacts[0].name.formatted_name,
         vcard: vcard(message.contacts[0]),
-      }
+      };
     } else {
       content.contactsArrayMessage = {
         displayName: `${message.length} contacts`,
@@ -287,142 +337,155 @@ export class BusinessStartupService extends ChannelStartupService {
           return {
             displayName: contact.name.formatted_name,
             vcard: vcard(contact),
-          }
+          };
         }),
-      }
+      };
     }
-    message.context
-      ? (content = {...content, contextInfo: {stanzaId: message.context.id}})
-      : content
-    return content
+    message.context ? (content = { ...content, contextInfo: { stanzaId: message.context.id } }) : content;
+    return content;
   }
 
   private renderMessageType(type: string) {
-    let messageType: string
+    let messageType: string;
 
     switch (type) {
       case 'text':
-        messageType = 'conversation'
-        break
+        messageType = 'conversation';
+        break;
       case 'image':
-        messageType = 'imageMessage'
-        break
+        messageType = 'imageMessage';
+        break;
       case 'video':
-        messageType = 'videoMessage'
-        break
+        messageType = 'videoMessage';
+        break;
       case 'audio':
-        messageType = 'audioMessage'
-        break
+        messageType = 'audioMessage';
+        break;
       case 'document':
-        messageType = 'documentMessage'
-        break
+        messageType = 'documentMessage';
+        break;
       case 'template':
-        messageType = 'conversation'
-        break
+        messageType = 'conversation';
+        break;
+      case 'location':
+        messageType = 'locationMessage';
+        break;
+      case 'sticker':
+        messageType = 'stickerMessage';
+        break;
       default:
-        messageType = 'conversation'
-        break
+        messageType = 'conversation';
+        break;
     }
 
-    return messageType
+    return messageType;
   }
 
-  protected async messageHandle(
-    received: any,
-    database: Database,
-    settings: any,
-  ) {
+  protected async messageHandle(received: any, database: Database, settings: any) {
     try {
-      let messageRaw: any
-      let pushName: any
+      let messageRaw: any;
+      let pushName: any;
 
-      if (received.contacts) pushName = received.contacts[0].profile.name
+      if (received.contacts) pushName = received.contacts[0].profile.name;
 
       if (received.messages) {
+        const message = received.messages[0];
+
         const key = {
-          id: received.messages[0].id,
+          id: message.id,
           remoteJid: this.phoneNumber,
-          fromMe:
-            received.messages[0].from === received.metadata.phone_number_id,
-        }
-        if (this.isMediaMessage(received?.messages[0])) {
+          fromMe: message.from === received.metadata.phone_number_id,
+        };
+
+        if (message.type === 'sticker') {
+          this.logger.log('Procesando mensaje de tipo sticker');
           messageRaw = {
             key,
             pushName,
-            message: this.messageMediaJson(received),
-            contextInfo: this.messageMediaJson(received)?.contextInfo,
-            messageType: this.renderMessageType(received.messages[0].type),
-            messageTimestamp: parseInt(
-              received.messages[0].timestamp,
-            ) as number,
+            message: {
+              stickerMessage: message.sticker || {},
+            },
+            messageType: 'stickerMessage',
+            messageTimestamp: parseInt(message.timestamp) as number,
             source: 'unknown',
             instanceId: this.instanceId,
-          }
+          };
+        } else if (this.isMediaMessage(message)) {
+          const messageContent =
+            message.type === 'audio' ? this.messageAudioJson(received) : this.messageMediaJson(received);
+
+          messageRaw = {
+            key,
+            pushName,
+            message: messageContent,
+            contextInfo: messageContent?.contextInfo,
+            messageType: this.renderMessageType(received.messages[0].type),
+            messageTimestamp: parseInt(received.messages[0].timestamp) as number,
+            source: 'unknown',
+            instanceId: this.instanceId,
+          };
 
           if (this.configService.get<S3>('S3').ENABLE) {
             try {
-              const message: any = received
+              const message: any = received;
 
-              const id = message.messages[0][message.messages[0].type].id
-              let urlServer =
-                this.configService.get<WaBusiness>('WA_BUSINESS').URL
-              const version =
-                this.configService.get<WaBusiness>('WA_BUSINESS').VERSION
-              urlServer = `${urlServer}/${version}/${id}`
-              const headers = {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${this.token}`,
-              }
-              const result = await axios.get(urlServer, {headers})
+              const id = message.messages[0][message.messages[0].type].id;
+              let urlServer = this.configService.get<WaBusiness>('WA_BUSINESS').URL;
+              const version = this.configService.get<WaBusiness>('WA_BUSINESS').VERSION;
+              urlServer = `${urlServer}/${version}/${id}`;
+              const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${this.token}` };
+              const result = await axios.get(urlServer, { headers });
 
               const buffer = await axios.get(result.data.url, {
-                headers,
+                headers: { Authorization: `Bearer ${this.token}` },
                 responseType: 'arraybuffer',
-              })
+              });
 
-              let mediaType
+              let mediaType;
 
               if (message.messages[0].document) {
-                mediaType = 'document'
+                mediaType = 'document';
               } else if (message.messages[0].image) {
-                mediaType = 'image'
+                mediaType = 'image';
               } else if (message.messages[0].audio) {
-                mediaType = 'audio'
+                mediaType = 'audio';
               } else {
-                mediaType = 'video'
+                mediaType = 'video';
               }
 
-              const mimetype =
-                result.data?.mime_type || result.headers['content-type']
+              const mimetype = result.data?.mime_type || result.headers['content-type'];
 
-              const contentDisposition = result.headers['content-disposition']
-              let fileName = `${message.messages[0].id}.${mimetype.split('/')[1]}`
+              const contentDisposition = result.headers['content-disposition'];
+              let fileName = `${message.messages[0].id}.${mimetype.split('/')[1]}`;
               if (contentDisposition) {
-                const match = contentDisposition.match(/filename="(.+?)"/)
+                const match = contentDisposition.match(/filename="(.+?)"/);
                 if (match) {
-                  fileName = match[1]
+                  fileName = match[1];
                 }
               }
 
-              const size =
-                result.headers['content-length'] || buffer.data.byteLength
+              // Para áudio, garantir extensão correta baseada no mimetype
+              if (mediaType === 'audio') {
+                if (mimetype.includes('ogg')) {
+                  fileName = `${message.messages[0].id}.ogg`;
+                } else if (mimetype.includes('mp3')) {
+                  fileName = `${message.messages[0].id}.mp3`;
+                } else if (mimetype.includes('m4a')) {
+                  fileName = `${message.messages[0].id}.m4a`;
+                }
+              }
 
-              const fullName = join(
-                `${this.instance.id}`,
-                key.remoteJid,
-                mediaType,
-                fileName,
-              )
+              const size = result.headers['content-length'] || buffer.data.byteLength;
+
+              const fullName = join(`${this.instance.id}`, key.remoteJid, mediaType, fileName);
 
               await s3Service.uploadFile(fullName, buffer.data, size, {
                 'Content-Type': mimetype,
-              })
+              });
 
-              const createdMessage = await this.prismaRepository.message.create(
-                {
-                  data: messageRaw,
-                },
-              )
+              const createdMessage = await this.prismaRepository.message.create({
+                data: messageRaw,
+              });
 
               await this.prismaRepository.media.create({
                 data: {
@@ -432,25 +495,78 @@ export class BusinessStartupService extends ChannelStartupService {
                   fileName: fullName,
                   mimetype,
                 },
-              })
+              });
 
-              const mediaUrl = await s3Service.getObjectUrl(fullName)
+              const mediaUrl = await s3Service.getObjectUrl(fullName);
 
-              messageRaw.message.mediaUrl = mediaUrl
-              messageRaw.message.base64 = buffer.data.toString('base64')
+              messageRaw.message.mediaUrl = mediaUrl;
+              messageRaw.message.base64 = buffer.data.toString('base64');
+
+              // Processar OpenAI speech-to-text para áudio após o mediaUrl estar disponível
+              if (this.configService.get<Openai>('OPENAI').ENABLED && mediaType === 'audio') {
+                const openAiDefaultSettings = await this.prismaRepository.openaiSetting.findFirst({
+                  where: {
+                    instanceId: this.instanceId,
+                  },
+                  include: {
+                    OpenaiCreds: true,
+                  },
+                });
+
+                if (
+                  openAiDefaultSettings &&
+                  openAiDefaultSettings.openaiCredsId &&
+                  openAiDefaultSettings.speechToText
+                ) {
+                  try {
+                    messageRaw.message.speechToText = `[audio] ${await this.openaiService.speechToText(
+                      openAiDefaultSettings.OpenaiCreds,
+                      {
+                        message: {
+                          mediaUrl: messageRaw.message.mediaUrl,
+                          ...messageRaw,
+                        },
+                      },
+                    )}`;
+                  } catch (speechError) {
+                    this.logger.error(`Error processing speech-to-text: ${speechError}`);
+                  }
+                }
+              }
             } catch (error) {
-              this.logger.error([
-                'Error on upload file to minio',
-                error?.message,
-                error?.stack,
-              ])
+              this.logger.error(['Error on upload file to minio', error?.message, error?.stack]);
             }
           } else {
-            const buffer = await this.downloadMediaMessage(
-              received?.messages[0],
-            )
+            const buffer = await this.downloadMediaMessage(received?.messages[0]);
+            messageRaw.message.base64 = buffer.toString('base64');
 
-            messageRaw.message.base64 = buffer.toString('base64')
+            // Processar OpenAI speech-to-text para áudio mesmo sem S3
+            if (this.configService.get<Openai>('OPENAI').ENABLED && message.type === 'audio') {
+              const openAiDefaultSettings = await this.prismaRepository.openaiSetting.findFirst({
+                where: {
+                  instanceId: this.instanceId,
+                },
+                include: {
+                  OpenaiCreds: true,
+                },
+              });
+
+              if (openAiDefaultSettings && openAiDefaultSettings.openaiCredsId && openAiDefaultSettings.speechToText) {
+                try {
+                  messageRaw.message.speechToText = `[audio] ${await this.openaiService.speechToText(
+                    openAiDefaultSettings.OpenaiCreds,
+                    {
+                      message: {
+                        base64: messageRaw.message.base64,
+                        ...messageRaw,
+                      },
+                    },
+                  )}`;
+                } catch (speechError) {
+                  this.logger.error(`Error processing speech-to-text: ${speechError}`);
+                }
+              }
+            }
           }
         } else if (received?.messages[0].interactive) {
           messageRaw = {
@@ -461,12 +577,10 @@ export class BusinessStartupService extends ChannelStartupService {
             },
             contextInfo: this.messageInteractiveJson(received)?.contextInfo,
             messageType: 'interactiveMessage',
-            messageTimestamp: parseInt(
-              received.messages[0].timestamp,
-            ) as number,
+            messageTimestamp: parseInt(received.messages[0].timestamp) as number,
             source: 'unknown',
             instanceId: this.instanceId,
-          }
+          };
         } else if (received?.messages[0].button) {
           messageRaw = {
             key,
@@ -476,12 +590,10 @@ export class BusinessStartupService extends ChannelStartupService {
             },
             contextInfo: this.messageButtonJson(received)?.contextInfo,
             messageType: 'buttonMessage',
-            messageTimestamp: parseInt(
-              received.messages[0].timestamp,
-            ) as number,
+            messageTimestamp: parseInt(received.messages[0].timestamp) as number,
             source: 'unknown',
             instanceId: this.instanceId,
-          }
+          };
         } else if (received?.messages[0].reaction) {
           messageRaw = {
             key,
@@ -491,12 +603,10 @@ export class BusinessStartupService extends ChannelStartupService {
             },
             contextInfo: this.messageReactionJson(received)?.contextInfo,
             messageType: 'reactionMessage',
-            messageTimestamp: parseInt(
-              received.messages[0].timestamp,
-            ) as number,
+            messageTimestamp: parseInt(received.messages[0].timestamp) as number,
             source: 'unknown',
             instanceId: this.instanceId,
-          }
+          };
         } else if (received?.messages[0].contacts) {
           messageRaw = {
             key,
@@ -506,12 +616,10 @@ export class BusinessStartupService extends ChannelStartupService {
             },
             contextInfo: this.messageContactsJson(received)?.contextInfo,
             messageType: 'contactMessage',
-            messageTimestamp: parseInt(
-              received.messages[0].timestamp,
-            ) as number,
+            messageTimestamp: parseInt(received.messages[0].timestamp) as number,
             source: 'unknown',
             instanceId: this.instanceId,
-          }
+          };
         } else {
           messageRaw = {
             key,
@@ -519,130 +627,92 @@ export class BusinessStartupService extends ChannelStartupService {
             message: this.messageTextJson(received),
             contextInfo: this.messageTextJson(received)?.contextInfo,
             messageType: this.renderMessageType(received.messages[0].type),
-            messageTimestamp: parseInt(
-              received.messages[0].timestamp,
-            ) as number,
+            messageTimestamp: parseInt(received.messages[0].timestamp) as number,
             source: 'unknown',
             instanceId: this.instanceId,
-          }
+          };
         }
 
-        if (this.configService.get<Openai>('OPENAI').ENABLED) {
-          const openAiDefaultSettings =
-            await this.prismaRepository.openaiSetting.findFirst({
-              where: {
-                instanceId: this.instanceId,
-              },
-              include: {
-                OpenaiCreds: true,
-              },
-            })
-
-          const audioMessage = received?.messages[0]?.audio
-
-          if (
-            openAiDefaultSettings &&
-            openAiDefaultSettings.openaiCredsId &&
-            openAiDefaultSettings.speechToText &&
-            audioMessage
-          ) {
-            messageRaw.message.speechToText =
-              await this.openaiService.speechToText(
-                openAiDefaultSettings.OpenaiCreds,
-                {
-                  message: {
-                    mediaUrl: messageRaw.message.mediaUrl,
-                    ...messageRaw,
-                  },
-                },
-                () => {},
-              )
-          }
+        if (this.localSettings.readMessages) {
+          // await this.client.readMessages([received.key]);
         }
 
-        this.logger.log(messageRaw)
+        this.logger.log(messageRaw);
 
-        this.sendDataWebhook(Events.MESSAGES_UPSERT, messageRaw)
+        this.sendDataWebhook(Events.MESSAGES_UPSERT, messageRaw);
 
         await chatbotController.emit({
-          instance: {
-            instanceName: this.instance.name,
-            instanceId: this.instanceId,
-          },
+          instance: { instanceName: this.instance.name, instanceId: this.instanceId },
           remoteJid: messageRaw.key.remoteJid,
           msg: messageRaw,
           pushName: messageRaw.pushName,
-        })
+        });
 
-        if (
-          this.configService.get<Chatwoot>('CHATWOOT').ENABLED &&
-          this.localChatwoot?.enabled
-        ) {
+        if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
           const chatwootSentMessage = await this.chatwootService.eventWhatsapp(
             Events.MESSAGES_UPSERT,
-            {instanceName: this.instance.name, instanceId: this.instanceId},
+            { instanceName: this.instance.name, instanceId: this.instanceId },
             messageRaw,
-          )
+          );
 
           if (chatwootSentMessage?.id) {
-            messageRaw.chatwootMessageId = chatwootSentMessage.id
-            messageRaw.chatwootInboxId = chatwootSentMessage.id
-            messageRaw.chatwootConversationId = chatwootSentMessage.id
+            messageRaw.chatwootMessageId = chatwootSentMessage.id;
+            messageRaw.chatwootInboxId = chatwootSentMessage.id;
+            messageRaw.chatwootConversationId = chatwootSentMessage.id;
           }
         }
 
-        if (!this.isMediaMessage(received?.messages[0])) {
+        if (!this.isMediaMessage(message) && message.type !== 'sticker') {
           await this.prismaRepository.message.create({
             data: messageRaw,
-          })
+          });
         }
 
         const contact = await this.prismaRepository.contact.findFirst({
-          where: {instanceId: this.instanceId, remoteJid: key.remoteJid},
-        })
+          where: { instanceId: this.instanceId, remoteJid: key.remoteJid },
+        });
 
         const contactRaw: any = {
           remoteJid: received.contacts[0].profile.phone,
           pushName,
+          // profilePicUrl: '',
           instanceId: this.instanceId,
-        }
+        };
 
         if (contactRaw.remoteJid === 'status@broadcast') {
-          return
+          return;
         }
 
         if (contact) {
           const contactRaw: any = {
             remoteJid: received.contacts[0].profile.phone,
             pushName,
+            // profilePicUrl: '',
             instanceId: this.instanceId,
-          }
+          };
 
-          this.sendDataWebhook(Events.CONTACTS_UPDATE, contactRaw)
+          this.sendDataWebhook(Events.CONTACTS_UPDATE, contactRaw);
 
-          if (
-            this.configService.get<Chatwoot>('CHATWOOT').ENABLED &&
-            this.localChatwoot?.enabled
-          ) {
+          if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
             await this.chatwootService.eventWhatsapp(
               Events.CONTACTS_UPDATE,
-              {instanceName: this.instance.name, instanceId: this.instanceId},
+              { instanceName: this.instance.name, instanceId: this.instanceId },
               contactRaw,
-            )
+            );
           }
 
           await this.prismaRepository.contact.updateMany({
-            where: {remoteJid: contact.remoteJid},
+            where: { remoteJid: contact.remoteJid },
             data: contactRaw,
-          })
-          return
+          });
+          return;
         }
 
-        this.sendDataWebhook(Events.CONTACTS_UPSERT, contactRaw)
+        this.sendDataWebhook(Events.CONTACTS_UPSERT, contactRaw);
 
         this.prismaRepository.contact.create({
           data: contactRaw,
-        })
+        });
       }
       if (received.statuses) {
         for await (const item of received.statuses) {
@@ -650,14 +720,11 @@ export class BusinessStartupService extends ChannelStartupService {
             id: item.id,
             remoteJid: this.phoneNumber,
             fromMe: this.phoneNumber === received.metadata.phone_number_id,
-          }
+          };
           if (settings?.groups_ignore && key.remoteJid.includes('@g.us')) {
-            return
+            return;
           }
-          if (
-            key.remoteJid !== 'status@broadcast' &&
-            !key?.remoteJid?.match(/(:\d+)/)
-          ) {
+          if (key.remoteJid !== 'status@broadcast' && !key?.remoteJid?.match(/(:\d+)/)) {
             const findMessage = await this.prismaRepository.message.findFirst({
               where: {
                 instanceId: this.instanceId,
@@ -666,14 +733,14 @@ export class BusinessStartupService extends ChannelStartupService {
                   equals: key.id,
                 },
               },
-            })
+            });
 
             if (!findMessage) {
-              return
+              return;
             }
 
             if (item.message === null && item.status === undefined) {
-              this.sendDataWebhook(Events.MESSAGES_DELETE, key)
+              this.sendDataWebhook(Events.MESSAGES_DELETE, key);
 
               const message: any = {
                 messageId: findMessage.id,
@@ -683,27 +750,21 @@ export class BusinessStartupService extends ChannelStartupService {
                 participant: key?.remoteJid,
                 status: 'DELETED',
                 instanceId: this.instanceId,
-              }
+              };
 
               await this.prismaRepository.messageUpdate.create({
                 data: message,
-              })
+              });
 
-              if (
-                this.configService.get<Chatwoot>('CHATWOOT').ENABLED &&
-                this.localChatwoot?.enabled
-              ) {
+              if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
                 this.chatwootService.eventWhatsapp(
                   Events.MESSAGES_DELETE,
-                  {
-                    instanceName: this.instance.name,
-                    instanceId: this.instanceId,
-                  },
-                  {key: key},
-                )
+                  { instanceName: this.instance.name, instanceId: this.instanceId },
+                  { key: key },
+                );
               }
 
-              return
+              return;
             }
 
             const message: any = {
@@ -714,128 +775,160 @@ export class BusinessStartupService extends ChannelStartupService {
               participant: key?.remoteJid,
               status: item.status.toUpperCase(),
               instanceId: this.instanceId,
-            }
+            };
 
-            this.sendDataWebhook(Events.MESSAGES_UPDATE, message)
+            this.sendDataWebhook(Events.MESSAGES_UPDATE, message);
 
             await this.prismaRepository.messageUpdate.create({
               data: message,
-            })
+            });
 
             if (findMessage.webhookUrl) {
-              await axios.post(findMessage.webhookUrl, message)
+              await axios.post(findMessage.webhookUrl, message);
             }
           }
         }
       }
     } catch (error) {
-      this.logger.error(error)
+      this.logger.error(error);
     }
   }
 
   private convertMessageToRaw(message: any, content: any) {
-    let convertMessage: any
+    let convertMessage: any;
 
     if (message?.conversation) {
       if (content?.context?.message_id) {
         convertMessage = {
           ...message,
-          contextInfo: {stanzaId: content.context.message_id},
-        }
-        return convertMessage
+          contextInfo: { stanzaId: content.context.message_id },
+        };
+        return convertMessage;
       }
-      convertMessage = message
-      return convertMessage
+      convertMessage = message;
+      return convertMessage;
     }
 
     if (message?.mediaType === 'image') {
       if (content?.context?.message_id) {
         convertMessage = {
           imageMessage: message,
-          contextInfo: {stanzaId: content.context.message_id},
-        }
-        return convertMessage
+          contextInfo: { stanzaId: content.context.message_id },
+        };
+        return convertMessage;
       }
       return {
         imageMessage: message,
-      }
+      };
     }
 
     if (message?.mediaType === 'video') {
       if (content?.context?.message_id) {
         convertMessage = {
           videoMessage: message,
-          contextInfo: {stanzaId: content.context.message_id},
-        }
-        return convertMessage
+          contextInfo: { stanzaId: content.context.message_id },
+        };
+        return convertMessage;
       }
       return {
         videoMessage: message,
-      }
+      };
     }
 
     if (message?.mediaType === 'audio') {
       if (content?.context?.message_id) {
         convertMessage = {
           audioMessage: message,
-          contextInfo: {stanzaId: content.context.message_id},
-        }
-        return convertMessage
+          contextInfo: { stanzaId: content.context.message_id },
+        };
+        return convertMessage;
       }
       return {
         audioMessage: message,
-      }
+      };
     }
 
     if (message?.mediaType === 'document') {
       if (content?.context?.message_id) {
         convertMessage = {
           documentMessage: message,
-          contextInfo: {stanzaId: content.context.message_id},
-        }
-        return convertMessage
+          contextInfo: { stanzaId: content.context.message_id },
+        };
+        return convertMessage;
       }
       return {
         documentMessage: message,
-      }
+      };
     }
 
-    return message
+    return message;
   }
 
   protected async eventHandler(content: any) {
-    const database = this.configService.get<Database>('DATABASE')
-    const settings = await this.findSettings()
+    try {
+      // Registro para depuración
+      this.logger.log('Contenido recibido en eventHandler:');
+      this.logger.log(JSON.stringify(content, null, 2));
 
-    this.messageHandle(content, database, settings)
+      const database = this.configService.get<Database>('DATABASE');
+      const settings = await this.findSettings();
+
+      // Si hay mensajes, verificar primero el tipo
+      if (content.messages && content.messages.length > 0) {
+        const message = content.messages[0];
+        this.logger.log(`Tipo de mensaje recibido: ${message.type}`);
+
+        // Verificamos el tipo de mensaje antes de procesarlo
+        if (
+          message.type === 'text' ||
+          message.type === 'image' ||
+          message.type === 'video' ||
+          message.type === 'audio' ||
+          message.type === 'document' ||
+          message.type === 'sticker' ||
+          message.type === 'location' ||
+          message.type === 'contacts' ||
+          message.type === 'interactive' ||
+          message.type === 'button' ||
+          message.type === 'reaction'
+        ) {
+          // Procesar el mensaje normalmente
+          this.messageHandle(content, database, settings);
+        } else {
+          this.logger.warn(`Tipo de mensaje no reconocido: ${message.type}`);
+        }
+      } else if (content.statuses) {
+        // Procesar actualizaciones de estado
+        this.messageHandle(content, database, settings);
+      } else {
+        this.logger.warn('No se encontraron mensajes ni estados en el contenido recibido');
+      }
+    } catch (error) {
+      this.logger.error('Error en eventHandler:');
+      this.logger.error(error);
+    }
   }
 
-  protected async sendMessageWithTyping(
-    number: string,
-    message: any,
-    options?: Options,
-    isIntegration = false,
-  ) {
+  protected async sendMessageWithTyping(number: string, message: any, options?: Options, isIntegration = false) {
     try {
-      let quoted: any
-      let webhookUrl: any
-      const linkPreview = options?.linkPreview != false ? undefined : false
+      let quoted: any;
+      let webhookUrl: any;
       if (options?.quoted) {
-        const m = options?.quoted
+        const m = options?.quoted;
 
-        const msg = m?.key
+        const msg = m?.key;
 
         if (!msg) {
-          throw 'Message not found'
+          throw 'Message not found';
         }
 
-        quoted = msg
+        quoted = msg;
       }
       if (options?.webhookUrl) {
-        webhookUrl = options.webhookUrl
+        webhookUrl = options.webhookUrl;
       }
 
-      let content: any
+      let content: any;
       const messageSent = await (async () => {
         if (message['reactionMessage']) {
           content = {
@@ -847,9 +940,9 @@ export class BusinessStartupService extends ChannelStartupService {
               message_id: message['reactionMessage']['key']['id'],
               emoji: message['reactionMessage']['text'],
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          return await this.post(content, 'messages');
         }
         if (message['locationMessage']) {
           content = {
@@ -863,9 +956,9 @@ export class BusinessStartupService extends ChannelStartupService {
               name: message['locationMessage']['name'],
               address: message['locationMessage']['address'],
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          return await this.post(content, 'messages');
         }
         if (message['contacts']) {
           content = {
@@ -874,10 +967,10 @@ export class BusinessStartupService extends ChannelStartupService {
             type: 'contacts',
             to: number.replace(/\D/g, ''),
             contacts: message['contacts'],
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          message = message['message']
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          message = message['message'];
+          return await this.post(content, 'messages');
         }
         if (message['conversation']) {
           content = {
@@ -887,14 +980,14 @@ export class BusinessStartupService extends ChannelStartupService {
             to: number.replace(/\D/g, ''),
             text: {
               body: message['conversation'],
-              preview_url: linkPreview,
+              preview_url: Boolean(options?.linkPreview),
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          return await this.post(content, 'messages');
         }
         if (message['media']) {
-          const isImage = message['mimetype']?.startsWith('image/')
+          const isImage = message['mimetype']?.startsWith('image/');
 
           content = {
             messaging_product: 'whatsapp',
@@ -903,14 +996,14 @@ export class BusinessStartupService extends ChannelStartupService {
             to: number.replace(/\D/g, ''),
             [message['mediaType']]: {
               [message['type']]: message['id'],
-              preview_url: linkPreview,
-              ...(message['fileName'] &&
-                !isImage && {filename: message['fileName']}),
-              caption: message['caption'],
+              ...(message['mediaType'] !== 'audio' &&
+                message['fileName'] &&
+                !isImage && { filename: message['fileName'] }),
+              ...(message['mediaType'] !== 'audio' && message['caption'] && { caption: message['caption'] }),
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          return await this.post(content, 'messages');
         }
         if (message['audio']) {
           content = {
@@ -921,9 +1014,9 @@ export class BusinessStartupService extends ChannelStartupService {
             audio: {
               [message['type']]: message['id'],
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          return await this.post(content, 'messages');
         }
         if (message['buttons']) {
           content = {
@@ -940,16 +1033,14 @@ export class BusinessStartupService extends ChannelStartupService {
                 buttons: message['buttons'],
               },
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          let formattedText = ''
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          let formattedText = '';
           for (const item of message['buttons']) {
-            formattedText += `▶️ ${item.reply?.title}\n`
+            formattedText += `▶️ ${item.reply?.title}\n`;
           }
-          message = {
-            conversation: `${message['text'] || 'Select'}\n` + formattedText,
-          }
-          return await this.post(content, 'messages')
+          message = { conversation: `${message['text'] || 'Select'}\n` + formattedText };
+          return await this.post(content, 'messages');
         }
         if (message['listMessage']) {
           content = {
@@ -974,20 +1065,17 @@ export class BusinessStartupService extends ChannelStartupService {
                 sections: message['listMessage']['sections'],
               },
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          let formattedText = ''
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          let formattedText = '';
           for (const section of message['listMessage']['sections']) {
-            formattedText += `${section?.title}\n`
+            formattedText += `${section?.title}\n`;
             for (const row of section.rows) {
-              formattedText += `${row?.title}\n`
+              formattedText += `${row?.title}\n`;
             }
           }
-          message = {
-            conversation:
-              `${message['listMessage']['title']}\n` + formattedText,
-          }
-          return await this.post(content, 'messages')
+          message = { conversation: `${message['listMessage']['title']}\n` + formattedText };
+          return await this.post(content, 'messages');
         }
         if (message['template']) {
           content = {
@@ -1002,77 +1090,61 @@ export class BusinessStartupService extends ChannelStartupService {
               },
               components: message['template']['components'],
             },
-          }
-          quoted ? (content.context = {message_id: quoted.id}) : content
-          message = {conversation: `▶️${message['template']['name']}◀️`}
-          return await this.post(content, 'messages')
+          };
+          quoted ? (content.context = { message_id: quoted.id }) : content;
+          message = { conversation: `▶️${message['template']['name']}◀️` };
+          return await this.post(content, 'messages');
         }
-      })()
+      })();
 
-      if (messageSent?.error_data) {
-        this.logger.error(messageSent)
-        return messageSent
+      if (messageSent?.error_data || messageSent.message) {
+        this.logger.error(messageSent);
+        return messageSent;
       }
 
       const messageRaw: any = {
-        key: {
-          fromMe: true,
-          id: messageSent?.messages[0]?.id,
-          remoteJid: createJid(number),
-        },
+        key: { fromMe: true, id: messageSent?.messages[0]?.id, remoteJid: createJid(number) },
         message: this.convertMessageToRaw(message, content),
         messageType: this.renderMessageType(content.type),
-        messageTimestamp:
-          (messageSent?.messages[0]?.timestamp as number) ||
-          Math.round(new Date().getTime() / 1000),
+        messageTimestamp: (messageSent?.messages[0]?.timestamp as number) || Math.round(new Date().getTime() / 1000),
         instanceId: this.instanceId,
         webhookUrl,
         status: status[1],
         source: 'unknown',
-      }
+      };
 
-      this.logger.log(messageRaw)
+      this.logger.log(messageRaw);
 
-      this.sendDataWebhook(Events.SEND_MESSAGE, messageRaw)
+      this.sendDataWebhook(Events.SEND_MESSAGE, messageRaw);
 
-      if (
-        this.configService.get<Chatwoot>('CHATWOOT').ENABLED &&
-        this.localChatwoot?.enabled &&
-        !isIntegration
-      ) {
+      if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled && !isIntegration) {
         this.chatwootService.eventWhatsapp(
           Events.SEND_MESSAGE,
-          {instanceName: this.instance.name, instanceId: this.instanceId},
+          { instanceName: this.instance.name, instanceId: this.instanceId },
           messageRaw,
-        )
+        );
       }
 
-      if (
-        this.configService.get<Chatwoot>('CHATWOOT').ENABLED &&
-        this.localChatwoot?.enabled &&
-        isIntegration
-      )
+      if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled && isIntegration)
         await chatbotController.emit({
-          instance: {
-            instanceName: this.instance.name,
-            instanceId: this.instanceId,
-          },
+          instance: { instanceName: this.instance.name, instanceId: this.instanceId },
           remoteJid: messageRaw.key.remoteJid,
           msg: messageRaw,
           pushName: messageRaw.pushName,
-        })
+        });
 
       await this.prismaRepository.message.create({
         data: messageRaw,
-      })
+      });
 
-      return messageRaw
+      return messageRaw;
     } catch (error) {
-      this.logger.error(error)
-      throw new BadRequestException(error.toString())
+      this.logger.error(error);
+      throw new BadRequestException(error.toString());
     }
   }
 
+  // Send Message Controller
   public async textMessage(data: SendTextDto, isIntegration = false) {
     const res = await this.sendMessageWithTyping(
       data.number,
@@ -1088,53 +1160,73 @@ export class BusinessStartupService extends ChannelStartupService {
         mentioned: data?.mentioned,
       },
       isIntegration,
-    )
-    return res
+    );
+    return res;
   }
 
-  private async getIdMedia(mediaMessage: any) {
-    const formData = new FormData()
+  private async getIdMedia(mediaMessage: any, isFile = false) {
+    try {
+      const formData = new FormData();
 
-    const fileStream = createReadStream(mediaMessage.media)
+      if (isFile === false) {
+        if (isURL(mediaMessage.media)) {
+          const response = await axios.get(mediaMessage.media, { responseType: 'arraybuffer' });
+          const buffer = Buffer.from(response.data, 'base64');
+          formData.append('file', buffer, {
+            filename: mediaMessage.fileName || 'media',
+            contentType: mediaMessage.mimetype,
+          });
+        } else {
+          const buffer = Buffer.from(mediaMessage.media, 'base64');
+          formData.append('file', buffer, {
+            filename: mediaMessage.fileName || 'media',
+            contentType: mediaMessage.mimetype,
+          });
+        }
+      } else {
+        formData.append('file', mediaMessage.media.buffer, {
+          filename: mediaMessage.media.originalname,
+          contentType: mediaMessage.media.mimetype,
+        });
+      }
 
-    formData.append('file', fileStream, {
-      filename: 'media',
-      contentType: mediaMessage.mimetype,
-    })
-    formData.append('typeFile', mediaMessage.mimetype)
-    formData.append('messaging_product', 'whatsapp')
+      const mimetype = mediaMessage.mimetype || mediaMessage.media.mimetype;
 
-    const headers = {Authorization: `Bearer ${this.token}`}
-    const res = await axios.post(
-      process.env.API_URL +
-        '/' +
-        process.env.VERSION +
-        '/' +
-        this.number +
-        '/media',
-      formData,
-      {headers},
-    )
-    return res.data.id
+      formData.append('typeFile', mimetype);
+      formData.append('messaging_product', 'whatsapp');
+
+      const token = this.token;
+
+      const headers = { Authorization: `Bearer ${token}` };
+      const url = `${this.configService.get<WaBusiness>('WA_BUSINESS').URL}/${
+        this.configService.get<WaBusiness>('WA_BUSINESS').VERSION
+      }/${this.number}/media`;
+
+      const res = await axios.post(url, formData, { headers });
+      return res.data.id;
+    } catch (error) {
+      this.logger.error(error.response.data);
+      throw new InternalServerErrorException(error?.toString() || error);
+    }
   }
 
   protected async prepareMediaMessage(mediaMessage: MediaMessage) {
     try {
       if (mediaMessage.mediatype === 'document' && !mediaMessage.fileName) {
-        const regex = new RegExp(/.*\/(.+?)\./)
-        const arrayMatch = regex.exec(mediaMessage.media)
-        mediaMessage.fileName = arrayMatch[1]
+        const regex = new RegExp(/.*\/(.+?)\./);
+        const arrayMatch = regex.exec(mediaMessage.media);
+        mediaMessage.fileName = arrayMatch[1];
       }
 
       if (mediaMessage.mediatype === 'image' && !mediaMessage.fileName) {
-        mediaMessage.fileName = 'image.png'
+        mediaMessage.fileName = 'image.png';
       }
 
       if (mediaMessage.mediatype === 'video' && !mediaMessage.fileName) {
-        mediaMessage.fileName = 'video.mp4'
+        mediaMessage.fileName = 'video.mp4';
       }
 
-      let mimetype: string | false
+      let mimetype: string | false;
 
       const prepareMedia: any = {
         caption: mediaMessage?.caption,
@@ -1142,42 +1234,38 @@ export class BusinessStartupService extends ChannelStartupService {
         mediaType: mediaMessage.mediatype,
         media: mediaMessage.media,
         gifPlayback: false,
-      }
+      };
 
       if (isURL(mediaMessage.media)) {
-        mimetype = mimeTypes.lookup(mediaMessage.media)
-        prepareMedia.id = mediaMessage.media
-        prepareMedia.type = 'link'
+        mimetype = mimeTypes.lookup(mediaMessage.media);
+        prepareMedia.id = mediaMessage.media;
+        prepareMedia.type = 'link';
       } else {
-        mimetype = mimeTypes.lookup(mediaMessage.fileName)
-        const id = await this.getIdMedia(prepareMedia)
-        prepareMedia.id = id
-        prepareMedia.type = 'id'
+        mimetype = mimeTypes.lookup(mediaMessage.fileName);
+        const id = await this.getIdMedia(prepareMedia);
+        prepareMedia.id = id;
+        prepareMedia.type = 'id';
       }
 
-      prepareMedia.mimetype = mimetype
+      prepareMedia.mimetype = mimetype;
 
-      return prepareMedia
+      return prepareMedia;
     } catch (error) {
-      this.logger.error(error)
-      throw new InternalServerErrorException(error?.toString() || error)
+      this.logger.error(error);
+      throw new InternalServerErrorException(error?.toString() || error);
     }
   }
 
-  public async mediaMessage(
-    data: SendMediaDto,
-    file?: any,
-    isIntegration = false,
-  ) {
-    const mediaData: SendMediaDto = {...data}
+  public async mediaMessage(data: SendMediaDto, file?: any, isIntegration = false) {
+    const mediaData: SendMediaDto = { ...data };
 
-    if (file) mediaData.media = file.buffer.toString('base64')
+    if (file) mediaData.media = file.buffer.toString('base64');
 
-    const message = await this.prepareMediaMessage(mediaData)
+    const message = await this.prepareMediaMessage(mediaData);
 
     const mediaSent = await this.sendMessageWithTyping(
       data.number,
-      {...message},
+      { ...message },
       {
         delay: data?.delay,
         presence: 'composing',
@@ -1187,58 +1275,96 @@ export class BusinessStartupService extends ChannelStartupService {
         mentioned: data?.mentioned,
       },
       isIntegration,
-    )
+    );
 
-    return mediaSent
+    return mediaSent;
   }
 
-  public async processAudio(audio: string, number: string) {
-    number = number.replace(/\D/g, '')
-    const hash = `${number}-${new Date().getTime()}`
+  public async processAudio(audio: string, number: string, file: any) {
+    number = number.replace(/\D/g, '');
+    const hash = `${number}-${new Date().getTime()}`;
 
-    let mimetype: string | false
+    if (process.env.API_AUDIO_CONVERTER) {
+      this.logger.verbose('Using audio converter API');
+      const formData = new FormData();
 
-    const prepareMedia: any = {
-      fileName: `${hash}.mp3`,
-      mediaType: 'audio',
-      media: audio,
-    }
+      if (file) {
+        formData.append('file', file.buffer, {
+          filename: file.originalname,
+          contentType: file.mimetype,
+        });
+      } else if (isURL(audio)) {
+        formData.append('url', audio);
+      } else {
+        formData.append('base64', audio);
+      }
 
-    if (isURL(audio)) {
-      mimetype = mimeTypes.lookup(audio)
-      prepareMedia.id = audio
-      prepareMedia.type = 'link'
+      formData.append('format', 'mp3');
+
+      const response = await axios.post(process.env.API_AUDIO_CONVERTER, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          apikey: process.env.API_AUDIO_CONVERTER_KEY,
+        },
+      });
+
+      const audioConverter = response?.data?.audio || response?.data?.url;
+
+      if (!audioConverter) {
+        throw new InternalServerErrorException('Failed to convert audio');
+      }
+
+      const prepareMedia: any = {
+        fileName: `${hash}.mp3`,
+        mediaType: 'audio',
+        media: audioConverter,
+        mimetype: 'audio/mpeg',
+      };
+
+      const id = await this.getIdMedia(prepareMedia);
+      prepareMedia.id = id;
+      prepareMedia.type = 'id';
+
+      this.logger.verbose('Audio converted');
+      return prepareMedia;
     } else {
-      mimetype = mimeTypes.lookup(prepareMedia.fileName)
-      const id = await this.getIdMedia(prepareMedia)
-      prepareMedia.id = id
-      prepareMedia.type = 'id'
+      let mimetype: string | false;
+
+      const prepareMedia: any = {
+        fileName: `${hash}.mp3`,
+        mediaType: 'audio',
+        media: audio,
+      };
+
+      if (isURL(audio)) {
+        mimetype = mimeTypes.lookup(audio);
+        prepareMedia.id = audio;
+        prepareMedia.type = 'link';
+      } else if (audio && !file) {
+        mimetype = mimeTypes.lookup(prepareMedia.fileName);
+        const id = await this.getIdMedia(prepareMedia);
+        prepareMedia.id = id;
+        prepareMedia.type = 'id';
+      } else if (file) {
+        prepareMedia.media = file;
+        const id = await this.getIdMedia(prepareMedia, true);
+        prepareMedia.id = id;
+        prepareMedia.type = 'id';
+        mimetype = file.mimetype;
+      }
+
+      prepareMedia.mimetype = mimetype;
+
+      return prepareMedia;
     }
-
-    prepareMedia.mimetype = mimetype
-
-    return prepareMedia
   }
 
-  public async audioWhatsapp(
-    data: SendAudioDto,
-    file?: any,
-    isIntegration = false,
-  ) {
-    const mediaData: SendAudioDto = {...data}
-
-    if (file?.buffer) {
-      mediaData.audio = file.buffer.toString('base64')
-    } else {
-      console.error('El archivo no tiene buffer o file es undefined')
-      throw new Error('File or buffer is undefined')
-    }
-
-    const message = await this.processAudio(mediaData.audio, data.number)
+  public async audioWhatsapp(data: SendAudioDto, file?: any, isIntegration = false) {
+    const message = await this.processAudio(data.audio, data.number, file);
 
     const audioSent = await this.sendMessageWithTyping(
       data.number,
-      {...message},
+      { ...message },
       {
         delay: data?.delay,
         presence: 'composing',
@@ -1248,24 +1374,21 @@ export class BusinessStartupService extends ChannelStartupService {
         mentioned: data?.mentioned,
       },
       isIntegration,
-    )
+    );
 
-    return audioSent
+    return audioSent;
   }
 
   public async buttonMessage(data: SendButtonsDto) {
-    const embeddedMedia: any = {}
+    const embeddedMedia: any = {};
 
     const btnItems = {
       text: data.buttons.map((btn) => btn.displayText),
       ids: data.buttons.map((btn) => btn.id),
-    }
+    };
 
     if (!arrayUnique(btnItems.text) || !arrayUnique(btnItems.ids)) {
-      throw new BadRequestException(
-        'Button texts cannot be repeated',
-        'Button IDs cannot be repeated.',
-      )
+      throw new BadRequestException('Button texts cannot be repeated', 'Button IDs cannot be repeated.');
     }
 
     return await this.sendMessageWithTyping(
@@ -1279,7 +1402,7 @@ export class BusinessStartupService extends ChannelStartupService {
               title: button.displayText,
               id: button.id,
             },
-          }
+          };
         }),
         [embeddedMedia?.mediaKey]: embeddedMedia?.message,
       },
@@ -1291,7 +1414,7 @@ export class BusinessStartupService extends ChannelStartupService {
         mentionsEveryOne: data?.mentionsEveryOne,
         mentioned: data?.mentioned,
       },
-    )
+    );
   }
 
   public async locationMessage(data: SendLocationDto) {
@@ -1313,16 +1436,16 @@ export class BusinessStartupService extends ChannelStartupService {
         mentionsEveryOne: data?.mentionsEveryOne,
         mentioned: data?.mentioned,
       },
-    )
+    );
   }
 
   public async listMessage(data: SendListDto) {
     const sectionsItems = {
       title: data.sections.map((list) => list.title),
-    }
+    };
 
     if (!arrayUnique(sectionsItems.title)) {
-      throw new BadRequestException('Section tiles cannot be repeated')
+      throw new BadRequestException('Section tiles cannot be repeated');
     }
 
     const sendData: any = {
@@ -1339,12 +1462,12 @@ export class BusinessStartupService extends ChannelStartupService {
                 title: row.title,
                 description: row.description.substring(0, 72),
                 id: row.rowId,
-              }
+              };
             }),
-          }
+          };
         }),
       },
-    }
+    };
 
     return await this.sendMessageWithTyping(data.number, sendData, {
       delay: data?.delay,
@@ -1353,7 +1476,7 @@ export class BusinessStartupService extends ChannelStartupService {
       linkPreview: data?.linkPreview,
       mentionsEveryOne: data?.mentionsEveryOne,
       mentioned: data?.mentioned,
-    })
+    });
   }
 
   public async templateMessage(data: SendTemplateDto, isIntegration = false) {
@@ -1376,49 +1499,42 @@ export class BusinessStartupService extends ChannelStartupService {
         webhookUrl: data?.webhookUrl,
       },
       isIntegration,
-    )
-    return res
+    );
+    return res;
   }
 
   public async contactMessage(data: SendContactDto) {
-    const message: any = {}
+    const message: any = {};
 
     const vcard = (contact: ContactMessage) => {
-      let result =
-        'BEGIN:VCARD\n' +
-        'VERSION:3.0\n' +
-        `N:${contact.fullName}\n` +
-        `FN:${contact.fullName}\n`
+      let result = 'BEGIN:VCARD\n' + 'VERSION:3.0\n' + `N:${contact.fullName}\n` + `FN:${contact.fullName}\n`;
 
       if (contact.organization) {
-        result += `ORG:${contact.organization};\n`
+        result += `ORG:${contact.organization};\n`;
       }
 
       if (contact.email) {
-        result += `EMAIL:${contact.email}\n`
+        result += `EMAIL:${contact.email}\n`;
       }
 
       if (contact.url) {
-        result += `URL:${contact.url}\n`
+        result += `URL:${contact.url}\n`;
       }
 
       if (!contact.wuid) {
-        contact.wuid = createJid(contact.phoneNumber)
+        contact.wuid = createJid(contact.phoneNumber);
       }
 
-      result +=
-        `item1.TEL;waid=${contact.wuid}:${contact.phoneNumber}\n` +
-        'item1.X-ABLabel:Celular\n' +
-        'END:VCARD'
+      result += `item1.TEL;waid=${contact.wuid}:${contact.phoneNumber}\n` + 'item1.X-ABLabel:Celular\n' + 'END:VCARD';
 
-      return result
-    }
+      return result;
+    };
 
     if (data.contact.length === 1) {
       message.contact = {
         displayName: data.contact[0].fullName,
         vcard: vcard(data.contact[0]),
-      }
+      };
     } else {
       message.contactsArrayMessage = {
         displayName: `${data.contact.length} contacts`,
@@ -1426,24 +1542,21 @@ export class BusinessStartupService extends ChannelStartupService {
           return {
             displayName: contact.fullName,
             vcard: vcard(contact),
-          }
+          };
         }),
-      }
+      };
     }
     return await this.sendMessageWithTyping(
       data.number,
       {
         contacts: data.contact.map((contact) => {
           return {
-            name: {
-              formatted_name: contact.fullName,
-              first_name: contact.fullName,
-            },
-            phones: [{phone: contact.phoneNumber}],
-            urls: [{url: contact.url}],
-            emails: [{email: contact.email}],
-            org: {company: contact.organization},
-          }
+            name: { formatted_name: contact.fullName, first_name: contact.fullName },
+            phones: [{ phone: contact.phoneNumber }],
+            urls: [{ url: contact.url }],
+            emails: [{ email: contact.email }],
+            org: { company: contact.organization },
+          };
         }),
         message,
       },
@@ -1455,7 +1568,7 @@ export class BusinessStartupService extends ChannelStartupService {
         mentionsEveryOne: data?.mentionsEveryOne,
         mentioned: data?.mentioned,
       },
-    )
+    );
   }
 
   public async reactionMessage(data: SendReactionDto) {
@@ -1464,16 +1577,14 @@ export class BusinessStartupService extends ChannelStartupService {
         key: data.key,
         text: data.reaction,
       },
-    })
+    });
   }
 
   public async getBase64FromMediaMessage(data: any) {
     try {
-      const msg = data.message
-      const messageType = msg.messageType.includes('Message')
-        ? msg.messageType
-        : msg.messageType + 'Message'
-      const mediaMessage = msg.message[messageType]
+      const msg = data.message;
+      const messageType = msg.messageType.includes('Message') ? msg.messageType : msg.messageType + 'Message';
+      const mediaMessage = msg.message[messageType];
 
       return {
         mediaType: msg.messageType,
@@ -1486,222 +1597,139 @@ export class BusinessStartupService extends ChannelStartupService {
         },
         mimetype: mediaMessage?.mime_type,
         base64: msg.message.base64,
-      }
+      };
     } catch (error) {
-      this.logger.error(error)
-      throw new BadRequestException(error.toString())
+      this.logger.error(error);
+      throw new BadRequestException(error.toString());
     }
   }
 
   public async deleteMessage() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
 
+  // methods not available on WhatsApp Business API
   public async mediaSticker() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async pollMessage() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async statusMessage() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async reloadConnection() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async whatsappNumber() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async markMessageAsRead() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async archiveChat() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async markChatUnread() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async fetchProfile() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async offerCall() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async sendPresence() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async setPresence() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async fetchPrivacySettings() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updatePrivacySettings() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async fetchBusinessProfile() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateProfileName() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateProfileStatus() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateProfilePicture() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async removeProfilePicture() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async blockUser() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateMessage() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async createGroup() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateGroupPicture() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateGroupSubject() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateGroupDescription() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async findGroup() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async fetchAllGroups() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async inviteCode() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async inviteInfo() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async sendInvite() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async acceptInviteCode() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async revokeInviteCode() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async findParticipants() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateGParticipant() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async updateGSetting() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async toggleEphemeral() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async leaveGroup() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async fetchLabels() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async handleLabel() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async receiveMobileCode() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
   public async fakeCall() {
-    throw new BadRequestException(
-      'Method not available on WhatsApp Business API',
-    )
+    throw new BadRequestException('Method not available on WhatsApp Business API');
   }
 }

@@ -1,4 +1,4 @@
-import {wa} from '@api/types/wa.types'
+import { wa } from '@api/types/wa.types';
 
 export const status: Record<number, wa.StatusMessage> = {
   0: 'ERROR',
@@ -7,4 +7,4 @@ export const status: Record<number, wa.StatusMessage> = {
   3: 'DELIVERY_ACK',
   4: 'READ',
   5: 'PLAYED',
-}
+};

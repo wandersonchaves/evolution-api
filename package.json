@@ -1,38 +1,42 @@
 {
-  "name": "evolution-api",
+  "name": "nextbot-api",
   "version": "2.3.0",
   "description": "Rest api for communication with WhatsApp",
   "main": "./dist/main.js",
   "type": "commonjs",
+  "prisma": {
+    "schema": "prisma/postgresql/postgresql-schema.prisma"
+  },
   "scripts": {
     "build": "tsc --noEmit && tsup",
-    "db:deploy:win": "node runWithProvider.js \"xcopy /E /I prisma\\DATABASE_PROVIDER-migrations prisma\\migrations && npx prisma migrate deploy --schema prisma\\DATABASE_PROVIDER-schema.prisma\"",
-    "db:deploy": "./Docker/scripts/deploy_database.sh",
-    "db:generate": "./Docker/scripts/generate_database.sh",
-    "db:migrate:dev:win": "node runWithProvider.js \"xcopy /E /I prisma\\DATABASE_PROVIDER-migrations prisma\\migrations && npx prisma migrate dev --schema prisma\\DATABASE_PROVIDER-schema.prisma\"",
-    "db:migrate:dev": "node runWithProvider.js \"rm -rf ./prisma/migrations && cp -r ./prisma/DATABASE_PROVIDER-migrations ./prisma/migrations && npx prisma migrate dev --schema ./prisma/DATABASE_PROVIDER-schema.prisma && cp -r ./prisma/migrations/* ./prisma/DATABASE_PROVIDER-migrations\"",
-    "db:studio": "node runWithProvider.js \"npx prisma studio --schema ./prisma/DATABASE_PROVIDER-schema.prisma\"",
+    "start": "tsnd -r tsconfig-paths/register --files --transpile-only ./src/main.ts",
+    "start:prod": "node dist/main",
     "dev:server": "tsnd -r tsconfig-paths/register --files --transpile-only --respawn --ignore-watch node_modules ./src/main.ts",
+    "test": "tsnd -r tsconfig-paths/register --files --transpile-only --respawn --ignore-watch node_modules ./test/all.test.ts",
+    "lint": "eslint --fix --ext .ts src",
+    "lint:check": "eslint --ext .ts src",
+    "db:generate": "node runWithProvider.js \"npx prisma generate --schema=SCHEMA_PATH\"",
+    "db:deploy": "node runWithProvider.js \"npx prisma migrate deploy --schema=SCHEMA_PATH\"",
+    "db:deploy:win": "node runWithProvider.js \"npx prisma migrate deploy --schema=SCHEMA_PATH\"",
+    "db:studio": "node runWithProvider.js \"npx prisma studio --schema=SCHEMA_PATH\"",
+    "db:migrate:dev": "node runWithProvider.js \"npx prisma migrate dev --schema=SCHEMA_PATH --name init\"",
+    "db:migrate:dev:win": "node runWithProvider.js \"npx prisma migrate dev --schema=SCHEMA_PATH\"",
+    "db:migrate:reset": "node runWithProvider.js \"npx prisma migrate reset --schema=SCHEMA_PATH\"",
     "e2e:ui": "playwright test --ui",
     "e2e": "playwright test",
     "format:check": "prettier --check \"**/*.{ts,tsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache",
-    "lint:check": "eslint --ext .ts src",
     "lint:fix": "next lint --fix",
-    "lint": "eslint --fix --ext .ts src",
-    "migrate:deploy": "prisma migrate deploy --schema=prisma/postgresql/postgresql-schema.prisma",
-    "migrate:deploy:prod": "npx prisma migrate deploy --schema=prisma/postgresql/postgresql-schema.prisma --migrations-dir=prisma/postgresql/postgresql-migrations",
-    "migrate:dev": "prisma migrate dev --schema=prisma/postgresql/postgresql-schema.prisma",
+    "migrate:deploy": "npx prisma migrate deploy --schema=prisma/postgresql/postgresql-schema.prisma",
+    "migrate:deploy:prod": "npx prisma migrate deploy --schema=prisma/postgresql/postgresql-schema.prisma --migrations-dir=prisma/postgresql/migrations",
+    "migrate:dev": "npx prisma migrate dev --schema=prisma/postgresql/postgresql-schema.prisma",
     "prepare": "husky",
-    "start:prod": "NODE_ENV=production node dist/main",
-    "start": "tsnd -r tsconfig-paths/register --files --transpile-only ./src/main.ts",
     "test:watch": "jest --watchAll",
-    "test": "tsnd -r tsconfig-paths/register --files --transpile-only --respawn --ignore-watch node_modules ./test/all.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EvolutionAPI/evolution-api.git"
+    "url": "git+https://github.com/NextBotAPI/nextbot-api.git"
   },
   "keywords": [
     "chat",
@@ -52,13 +56,13 @@
   ],
   "author": {
     "name": "Davidson Gomes",
-    "email": "contato@evolution-api.com"
+    "email": "contato@nextbot-api.com"
   },
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/EvolutionAPI/evolution-api/issues"
+    "url": "https://github.com/NextBotAPI/nextbot-api/issues"
   },
-  "homepage": "https://github.com/EvolutionAPI/evolution-api#readme",
+  "homepage": "https://github.com/NextBotAPI/nextbot-api#readme",
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
     "@aws-sdk/client-sqs": "^3.723.0",

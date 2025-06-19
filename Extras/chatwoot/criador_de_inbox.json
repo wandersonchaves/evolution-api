@@ -4,7 +4,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.evolution_url }}/instance/create",
+        "url": "={{ $json.nextbot_url }}/instance/create",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -169,8 +169,8 @@
               "value": "https://chatwootUrl - preencha"
             },
             {
-              "name": "evolution_url",
-              "value": "https://evolution_url - preencha"
+              "name": "nextbot_url",
+              "value": "https://nextbot_url - preencha"
             },
             {
               "name": "global_api_key",
@@ -416,7 +416,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n\"channel\": {\n\"webhook_url\": \"{{ $('Info Base').item.json[\"evolution_url\"] }}/chatwoot/webhook/{{ encodeURIComponent($('Info Base').item.json[\"instanceName\"]) }}\"\n}\n}",
+        "jsonBody": "={\n\"channel\": {\n\"webhook_url\": \"{{ $('Info Base').item.json[\"nextbot_url\"] }}/chatwoot/webhook/{{ encodeURIComponent($('Info Base').item.json[\"instanceName\"]) }}\"\n}\n}",
         "options": {}
       },
       "id": "74d6db21-d49e-48d6-b1a8-ff8bddca67d1",

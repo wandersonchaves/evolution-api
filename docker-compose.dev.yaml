@@ -1,25 +1,25 @@
 services:
   api:
-    container_name: evolution_api
+    container_name: nextbot_api
     image: evolution/api:local
     build: .
     restart: always
     ports:
       - 8080:8080
     volumes:
-      - evolution_instances:/evolution/instances
+      - nextbot_instances:/nextbot/instances
     networks:
-      - evolution-net
+      - nextbot-net
     env_file:
       - .env
     expose:
       - 8080
 
 volumes:
-  evolution_instances:
+  nextbot_instances:
 
 
 networks:
-  evolution-net:
-    name: evolution-net
+  nextbot-net:
+    name: nextbot-net
     driver: bridge

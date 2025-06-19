@@ -1,9 +1,9 @@
-import {Multer} from 'multer'
+import { Multer } from 'multer';
 
 declare global {
   namespace Express {
     interface Request {
-      file?: Multer.File
+      file?: Multer.File;
     }
   }
 }

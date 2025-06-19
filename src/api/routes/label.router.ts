@@ -1,14 +1,14 @@
-import {RouterBroker} from '@api/abstract/abstract.router'
-import {labelController} from '@api/server.module'
-import {HandleLabelDto, LabelDto} from '@root/interfaces/http/dtos/label.dto'
-import {handleLabelSchema} from '@validate/validate.schema'
-import {RequestHandler, Router} from 'express'
+import { RouterBroker } from '@api/abstract/abstract.router';
+import { HandleLabelDto, LabelDto } from '@api/dto/label.dto';
+import { labelController } from '@api/server.module';
+import { handleLabelSchema } from '@validate/validate.schema';
+import { RequestHandler, Router } from 'express';
 
-import {HttpStatus} from './index.router'
+import { HttpStatus } from './index.router';
 
 export class LabelRouter extends RouterBroker {
   constructor(...guards: RequestHandler[]) {
-    super()
+    super();
     this.router
       .get(this.routerPath('findLabels'), ...guards, async (req, res) => {
         const response = await this.dataValidate<LabelDto>({
@@ -16,22 +16,21 @@ export class LabelRouter extends RouterBroker {
           schema: null,
           ClassRef: LabelDto,
           execute: (instance) => labelController.fetchLabels(instance),
-        })
+        });
 
-        return res.status(HttpStatus.OK).json(response)
+        return res.status(HttpStatus.OK).json(response);
       })
       .post(this.routerPath('handleLabel'), ...guards, async (req, res) => {
         const response = await this.dataValidate<HandleLabelDto>({
           request: req,
           schema: handleLabelSchema,
           ClassRef: HandleLabelDto,
-          execute: (instance, data) =>
-            labelController.handleLabel(instance, data),
-        })
+          execute: (instance, data) => labelController.handleLabel(instance, data),
+        });
 
-        return res.status(HttpStatus.OK).json(response)
-      })
+        return res.status(HttpStatus.OK).json(response);
+      });
   }
 
-  public readonly router: Router = Router()
+  public readonly router: Router = Router();
 }

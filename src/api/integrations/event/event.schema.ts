@@ -1,10 +1,10 @@
-import {JSONSchema7} from 'json-schema'
-import {v4} from 'uuid'
+import { JSONSchema7 } from 'json-schema';
+import { v4 } from 'uuid';
 
-import {EventController} from './event.controller'
+import { EventController } from './event.controller';
 
-export * from '@api/integrations/event/pusher/pusher.schema'
-export * from '@api/integrations/event/webhook/webhook.schema'
+export * from '@api/integrations/event/pusher/pusher.schema';
+export * from '@api/integrations/event/webhook/webhook.schema';
 
 export const eventSchema: JSONSchema7 = {
   $id: v4(),
@@ -27,7 +27,7 @@ export const eventSchema: JSONSchema7 = {
     event: {
       type: 'object',
       properties: {
-        enabled: {type: 'boolean', enum: [true, false]},
+        enabled: { type: 'boolean', enum: [true, false] },
         events: {
           type: 'array',
           minItems: 0,
@@ -40,4 +40,4 @@ export const eventSchema: JSONSchema7 = {
       required: ['enabled'],
     },
   },
-}
+};

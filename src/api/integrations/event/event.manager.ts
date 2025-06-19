@@ -1,114 +1,124 @@
-import {PusherController} from '@api/integrations/event/pusher/pusher.controller'
-import {RabbitmqController} from '@api/integrations/event/rabbitmq/rabbitmq.controller'
-import {SqsController} from '@api/integrations/event/sqs/sqs.controller'
-import {WebhookController} from '@api/integrations/event/webhook/webhook.controller'
-import {WebsocketController} from '@api/integrations/event/websocket/websocket.controller'
-import type {WAMonitoringService} from '@root/application/chat/use-cases/monitor.service'
-import type {PrismaRepository} from '@root/infrastructure/database/repositories/repository/repository.service'
-import {Server} from 'http'
+import { NatsController } from '@api/integrations/event/nats/nats.controller';
+import { PusherController } from '@api/integrations/event/pusher/pusher.controller';
+import { RabbitmqController } from '@api/integrations/event/rabbitmq/rabbitmq.controller';
+import { SqsController } from '@api/integrations/event/sqs/sqs.controller';
+import { WebhookController } from '@api/integrations/event/webhook/webhook.controller';
+import { WebsocketController } from '@api/integrations/event/websocket/websocket.controller';
+import { PrismaRepository } from '@api/repository/repository.service';
+import { WAMonitoringService } from '@api/services/monitor.service';
+import { Server } from 'http';
 
 export class EventManager {
-  private prismaRepository: PrismaRepository
-  private waMonitor: WAMonitoringService
-  private websocketController: WebsocketController
-  private webhookController: WebhookController
-  private rabbitmqController: RabbitmqController
-  private sqsController: SqsController
-  private pusherController: PusherController
+  private prismaRepository: PrismaRepository;
+  private waMonitor: WAMonitoringService;
+  private websocketController: WebsocketController;
+  private webhookController: WebhookController;
+  private rabbitmqController: RabbitmqController;
+  private natsController: NatsController;
+  private sqsController: SqsController;
+  private pusherController: PusherController;
 
-  constructor(
-    prismaRepository: PrismaRepository,
-    waMonitor: WAMonitoringService,
-  ) {
-    this.prisma = prismaRepository
-    this.monitor = waMonitor
+  constructor(prismaRepository: PrismaRepository, waMonitor: WAMonitoringService) {
+    this.prisma = prismaRepository;
+    this.monitor = waMonitor;
 
-    this.websocket = new WebsocketController(prismaRepository, waMonitor)
-    this.webhook = new WebhookController(prismaRepository, waMonitor)
-    this.rabbitmq = new RabbitmqController(prismaRepository, waMonitor)
-    this.sqs = new SqsController(prismaRepository, waMonitor)
-    this.pusher = new PusherController(prismaRepository, waMonitor)
+    this.websocket = new WebsocketController(prismaRepository, waMonitor);
+    this.webhook = new WebhookController(prismaRepository, waMonitor);
+    this.rabbitmq = new RabbitmqController(prismaRepository, waMonitor);
+    this.nats = new NatsController(prismaRepository, waMonitor);
+    this.sqs = new SqsController(prismaRepository, waMonitor);
+    this.pusher = new PusherController(prismaRepository, waMonitor);
   }
 
   public set prisma(prisma: PrismaRepository) {
-    this.prismaRepository = prisma
+    this.prismaRepository = prisma;
   }
 
   public get prisma() {
-    return this.prismaRepository
+    return this.prismaRepository;
   }
 
   public set monitor(waMonitor: WAMonitoringService) {
-    this.waMonitor = waMonitor
+    this.waMonitor = waMonitor;
   }
 
   public get monitor() {
-    return this.waMonitor
+    return this.waMonitor;
   }
 
   public set websocket(websocket: WebsocketController) {
-    this.websocketController = websocket
+    this.websocketController = websocket;
   }
 
   public get websocket() {
-    return this.websocketController
+    return this.websocketController;
   }
 
   public set webhook(webhook: WebhookController) {
-    this.webhookController = webhook
+    this.webhookController = webhook;
   }
 
   public get webhook() {
-    return this.webhookController
+    return this.webhookController;
   }
 
   public set rabbitmq(rabbitmq: RabbitmqController) {
-    this.rabbitmqController = rabbitmq
+    this.rabbitmqController = rabbitmq;
   }
 
   public get rabbitmq() {
-    return this.rabbitmqController
+    return this.rabbitmqController;
+  }
+
+  public set nats(nats: NatsController) {
+    this.natsController = nats;
+  }
+
+  public get nats() {
+    return this.natsController;
   }
 
   public set sqs(sqs: SqsController) {
-    this.sqsController = sqs
+    this.sqsController = sqs;
   }
 
   public get sqs() {
-    return this.sqsController
+    return this.sqsController;
   }
 
   public set pusher(pusher: PusherController) {
-    this.pusherController = pusher
+    this.pusherController = pusher;
   }
   public get pusher() {
-    return this.pusherController
+    return this.pusherController;
   }
 
   public init(httpServer: Server): void {
-    this.websocket.init(httpServer)
-    this.rabbitmq.init()
-    this.sqs.init()
-    this.pusher.init()
+    this.websocket.init(httpServer);
+    this.rabbitmq.init();
+    this.nats.init();
+    this.sqs.init();
+    this.pusher.init();
   }
 
   public async emit(eventData: {
-    instanceName: string
-    origin: string
-    event: string
-    data: Object
-    serverUrl: string
-    dateTime: string
-    sender: string
-    apiKey?: string
-    local?: boolean
-    integration?: string[]
+    instanceName: string;
+    origin: string;
+    event: string;
+    data: Object;
+    serverUrl: string;
+    dateTime: string;
+    sender: string;
+    apiKey?: string;
+    local?: boolean;
+    integration?: string[];
   }): Promise<void> {
-    await this.websocket.emit(eventData)
-    await this.rabbitmq.emit(eventData)
-    await this.sqs.emit(eventData)
-    await this.webhook.emit(eventData)
-    await this.pusher.emit(eventData)
+    await this.websocket.emit(eventData);
+    await this.rabbitmq.emit(eventData);
+    await this.nats.emit(eventData);
+    await this.sqs.emit(eventData);
+    await this.webhook.emit(eventData);
+    await this.pusher.emit(eventData);
   }
 
   public async setInstance(instanceName: string, data: any): Promise<any> {
@@ -118,7 +128,7 @@ export class EventManager {
           enabled: true,
           events: data.websocket?.events,
         },
-      })
+      });
 
     if (data.rabbitmq)
       await this.rabbitmq.set(instanceName, {
@@ -126,7 +136,15 @@ export class EventManager {
           enabled: true,
           events: data.rabbitmq?.events,
         },
-      })
+      });
+
+    if (data.nats)
+      await this.nats.set(instanceName, {
+        nats: {
+          enabled: true,
+          events: data.nats?.events,
+        },
+      });
 
     if (data.sqs)
       await this.sqs.set(instanceName, {
@@ -134,7 +152,7 @@ export class EventManager {
           enabled: true,
           events: data.sqs?.events,
         },
-      })
+      });
 
     if (data.webhook)
       await this.webhook.set(instanceName, {
@@ -146,7 +164,7 @@ export class EventManager {
           base64: data.webhook?.base64,
           byEvents: data.webhook?.byEvents,
         },
-      })
+      });
 
     if (data.pusher)
       await this.pusher.set(instanceName, {
@@ -159,6 +177,6 @@ export class EventManager {
           cluster: data.pusher?.cluster,
           useTLS: data.pusher?.useTLS,
         },
-      })
+      });
   }
 }

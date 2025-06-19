@@ -1,6 +1,6 @@
 services:
   api:
-    container_name: evolution_api
+    container_name: nextbot_api
     image: evoapicloud/evolution-api:latest
     restart: always
     depends_on:
@@ -9,9 +9,9 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - evolution_instances:/evolution/instances
+      - nextbot_instances:/nextbot/instances
     networks:
-      - evolution-net
+      - nextbot-net
     env_file:
       - .env
     expose:
@@ -20,12 +20,12 @@ services:
   redis:
     image: redis:latest
     networks:
-      - evolution-net
+      - nextbot-net
     container_name: redis
     command: >
       redis-server --port 6379 --appendonly yes
     volumes:
-      - evolution_redis:/data
+      - nextbot_redis:/data
     ports:
       - 6379:6379
 
@@ -33,7 +33,7 @@ services:
     container_name: postgres
     image: postgres:15
     networks:
-      - evolution-net
+      - nextbot-net
     command: ["postgres", "-c", "max_connections=1000", "-c", "listen_addresses=*"]
     restart: always
     ports:
@@ -41,7 +41,7 @@ services:
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=evolution
+      - POSTGRES_DB=nextbot
       - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -49,12 +49,12 @@ services:
       - 5432
 
 volumes:
-  evolution_instances:
-  evolution_redis:
+  nextbot_instances:
+  nextbot_redis:
   postgres_data:
 
 
 networks:
-  evolution-net:
-    name: evolution-net
+  nextbot-net:
+    name: nextbot-net
     driver: bridge

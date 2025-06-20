@@ -790,9 +790,6 @@ export abstract class BaseChatbotController<BotType = any, BotData extends BaseC
 
       const content = getConversationMessage(msg);
 
-      // Get integration type
-      // const integrationType = this.getIntegrationType();
-
       // Find a bot for this message
       let findBot: any = await this.findBotTrigger(this.botRepository, content, instance, session);
 

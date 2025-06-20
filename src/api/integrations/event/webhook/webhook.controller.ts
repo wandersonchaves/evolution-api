@@ -4,7 +4,6 @@ import { WAMonitoringService } from '@api/services/monitor.service';
 import { wa } from '@api/types/wa.types';
 import { configService, Log, Webhook } from '@config/env.config';
 import { Logger } from '@config/logger.config';
-// import { BadRequestException } from '@exceptions';
 import axios, { AxiosInstance } from 'axios';
 import * as jwt from 'jsonwebtoken';
 
@@ -18,10 +17,6 @@ export class WebhookController extends EventController implements EventControlle
   }
 
   override async set(instanceName: string, data: EventDto): Promise<wa.LocalWebHook> {
-    // if (!/^(https?:\/\/)/.test(data.webhook.url)) {
-    //   throw new BadRequestException('Invalid "url" property');
-    // }
-
     if (!data.webhook?.enabled) {
       data.webhook.events = [];
     } else {

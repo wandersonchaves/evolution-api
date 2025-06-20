@@ -1815,10 +1815,6 @@ export class BaileysStartupService extends ChannelStartupService {
     const jid = createJid(number);
 
     try {
-      // const call = await this.client.offerCall(jid, isVideo);
-      // setTimeout(() => this.client.terminateCall(call.id, call.to), callDuration * 1000);
-
-      // return call;
       return { id: '123', jid, isVideo, callDuration };
     } catch (error) {
       return error;
@@ -1833,7 +1829,6 @@ export class BaileysStartupService extends ChannelStartupService {
     quoted: any,
     messageId?: string,
     ephemeralExpiration?: number,
-    // participants?: GroupParticipant[],
   ) {
     sender = sender.toLowerCase();
 
@@ -1841,10 +1836,6 @@ export class BaileysStartupService extends ChannelStartupService {
 
     if (isJidGroup(sender)) {
       option.useCachedGroupMetadata = true;
-      // if (participants)
-      //   option.cachedGroupMetadata = async () => {
-      //     return { participants: participants as GroupParticipant[] };
-      //   };
     }
 
     if (ephemeralExpiration) option.ephemeralExpiration = ephemeralExpiration;
@@ -2045,7 +2036,6 @@ export class BaileysStartupService extends ChannelStartupService {
           const cache = this.configService.get<CacheConf>('CACHE');
           if (!cache.REDIS.ENABLED && !cache.LOCAL.ENABLED) group = await this.findGroup({ groupJid: sender }, 'inner');
           else group = await this.getGroupMetadataCache(sender);
-          // group = await this.findGroup({ groupJid: sender }, 'inner');
         } catch (error) {
           throw new NotFoundException('Group not found');
         }
@@ -2074,7 +2064,6 @@ export class BaileysStartupService extends ChannelStartupService {
           quoted,
           null,
           group?.ephemeralDuration,
-          // group?.participants,
         );
       } else {
         messageSent = await this.sendMessage(sender, message, mentions, linkPreview, quoted);

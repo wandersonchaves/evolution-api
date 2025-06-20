@@ -13,6 +13,14 @@ export class CacheService {
     }
   }
 
+  private isAvailable(): boolean {
+    return !!this.cache;
+  }
+
+  private supports(method: keyof ICache): boolean {
+    return this.isAvailable() && typeof this.cache[method] === 'function';
+  }
+
   async get(key: string): Promise<any> {
     if (!this.cache) {
       return;
@@ -65,11 +73,13 @@ export class CacheService {
     return this.cache.has(key);
   }
 
-  async delete(key: string) {
-    if (!this.cache) {
-      return;
+  async delete(key: string): Promise<void> {
+    if (!this.supports('delete')) return;
+    try {
+      await this.cache!.delete(key);
+    } catch (error) {
+      this.logger.error(`🚀 ~ Failed to delete cache "${key}": ${error.message}`);
     }
-    return this.cache.delete(key);
   }
 
   async hDelete(key: string, field: string) {

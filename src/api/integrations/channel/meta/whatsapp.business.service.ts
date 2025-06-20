@@ -633,10 +633,6 @@ export class BusinessStartupService extends ChannelStartupService {
           };
         }
 
-        if (this.localSettings.readMessages) {
-          // await this.client.readMessages([received.key]);
-        }
-
         this.logger.log(messageRaw);
 
         this.sendDataWebhook(Events.MESSAGES_UPSERT, messageRaw);
@@ -675,7 +671,6 @@ export class BusinessStartupService extends ChannelStartupService {
         const contactRaw: any = {
           remoteJid: received.contacts[0].profile.phone,
           pushName,
-          // profilePicUrl: '',
           instanceId: this.instanceId,
         };
 
@@ -687,7 +682,6 @@ export class BusinessStartupService extends ChannelStartupService {
           const contactRaw: any = {
             remoteJid: received.contacts[0].profile.phone,
             pushName,
-            // profilePicUrl: '',
             instanceId: this.instanceId,
           };
 

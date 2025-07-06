@@ -5,7 +5,7 @@ services:
     container_name: mysql
     image: percona/percona-server:8.0
     networks:
-      - nextbot-net
+      - evolution-net
     restart: always
     ports:
       - 3306:3306
@@ -22,6 +22,6 @@ volumes:
 
 
 networks:
-  nextbot-net:
-    name: nextbot-net
+  evolution-net:
+    name: evolution-net
     driver: bridge

@@ -5,9 +5,9 @@ RUN apk update && \
 
 LABEL version="2.3.0" description="Api to control whatsapp features through http requests." 
 LABEL maintainer="Davidson Gomes" git="https://github.com/DavidsonGomes"
-LABEL contact="contato@nextbot-api.com"
+LABEL contact="contato@evolution-api.com"
 
-WORKDIR /nextbot
+WORKDIR /evolution
 
 COPY ./package.json ./tsconfig.json ./
 
@@ -36,20 +36,20 @@ RUN apk update && \
 
 ENV TZ=America/Sao_Paulo
 
-WORKDIR /nextbot
+WORKDIR /evolution
 
-COPY --from=builder /nextbot/package.json ./package.json
-COPY --from=builder /nextbot/package-lock.json ./package-lock.json
+COPY --from=builder /evolution/package.json ./package.json
+COPY --from=builder /evolution/package-lock.json ./package-lock.json
 
-COPY --from=builder /nextbot/node_modules ./node_modules
-COPY --from=builder /nextbot/dist ./dist
-COPY --from=builder /nextbot/prisma ./prisma
-COPY --from=builder /nextbot/manager ./manager
-COPY --from=builder /nextbot/public ./public
-COPY --from=builder /nextbot/.env ./.env
-COPY --from=builder /nextbot/Docker ./Docker
-COPY --from=builder /nextbot/runWithProvider.js ./runWithProvider.js
-COPY --from=builder /nextbot/tsup.config.ts ./tsup.config.ts
+COPY --from=builder /evolution/node_modules ./node_modules
+COPY --from=builder /evolution/dist ./dist
+COPY --from=builder /evolution/prisma ./prisma
+COPY --from=builder /evolution/manager ./manager
+COPY --from=builder /evolution/public ./public
+COPY --from=builder /evolution/.env ./.env
+COPY --from=builder /evolution/Docker ./Docker
+COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
+COPY --from=builder /evolution/tsup.config.ts ./tsup.config.ts
 
 ENV DOCKER_ENV=true
 

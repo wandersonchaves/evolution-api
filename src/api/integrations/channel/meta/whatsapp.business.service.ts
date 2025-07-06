@@ -152,7 +152,7 @@ export class BusinessStartupService extends ChannelStartupService {
 
       // Depois, baixe o arquivo usando a URL retornada
       result = await axios.get(result.data.url, {
-        headers: { Authorization: `Bearer ${this.token}` },
+        headers: { Authorization: `Bearer ${this.token}` }, // Use apenas o token de autorização para download
         responseType: 'arraybuffer',
       });
 
@@ -178,7 +178,7 @@ export class BusinessStartupService extends ChannelStartupService {
     let content: any = {
       audioMessage: {
         ...message.audio,
-        ptt: message.audio.voice || false,
+        ptt: message.audio.voice || false, // Define se é mensagem de voz
       },
     };
     if (message.context) {
@@ -389,7 +389,7 @@ export class BusinessStartupService extends ChannelStartupService {
       if (received.contacts) pushName = received.contacts[0].profile.name;
 
       if (received.messages) {
-        const message = received.messages[0];
+        const message = received.messages[0]; // Añadir esta línea para definir message
 
         const key = {
           id: message.id,
@@ -437,7 +437,7 @@ export class BusinessStartupService extends ChannelStartupService {
               const result = await axios.get(urlServer, { headers });
 
               const buffer = await axios.get(result.data.url, {
-                headers: { Authorization: `Bearer ${this.token}` },
+                headers: { Authorization: `Bearer ${this.token}` }, // Use apenas o token de autorização para download
                 responseType: 'arraybuffer',
               });
 
@@ -633,6 +633,10 @@ export class BusinessStartupService extends ChannelStartupService {
           };
         }
 
+        if (this.localSettings.readMessages) {
+          // await this.client.readMessages([received.key]);
+        }
+
         this.logger.log(messageRaw);
 
         this.sendDataWebhook(Events.MESSAGES_UPSERT, messageRaw);
@@ -671,6 +675,7 @@ export class BusinessStartupService extends ChannelStartupService {
         const contactRaw: any = {
           remoteJid: received.contacts[0].profile.phone,
           pushName,
+          // profilePicUrl: '',
           instanceId: this.instanceId,
         };
 
@@ -682,6 +687,7 @@ export class BusinessStartupService extends ChannelStartupService {
           const contactRaw: any = {
             remoteJid: received.contacts[0].profile.phone,
             pushName,
+            // profilePicUrl: '',
             instanceId: this.instanceId,
           };
 

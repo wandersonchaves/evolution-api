@@ -14,14 +14,14 @@ body:
       description: |
         O rastreador de problemas é apenas para relatar bugs e solicitações de recursos.
         Para perguntas de suporte relacionadas ao usuário final, acesse:
-          - [Discord](https://nextbot-api.com/discord)
-          - [Grupo do WhatsApp](https://nextbot-api.com/whatsapp)
+          - [Discord](https://evolution-api.com/discord)
+          - [Grupo do WhatsApp](https://evolution-api.com/whatsapp)
           <br/>
 
         **NÃO ABRA UM PROBLEMA PARA PERGUNTAS GERAIS DE SUPORTE.**
 
       options:
-        - label: Sim, pesquisei problemas semelhantes no [GitHub](https://github.com/NextBotAPI/nextbot-api/issues) e não encontrei nenhum.
+        - label: Sim, pesquisei problemas semelhantes no [GitHub](https://github.com/EvolutionAPI/evolution-api/issues) e não encontrei nenhum.
           required: true
 
   - type: textarea

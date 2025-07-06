@@ -4,20 +4,20 @@ services:
   redis:
     image: redis:latest
     networks:
-      - nextbot-net
+      - evolution-net
     container_name: redis
     command: >
       redis-server --port 6379 --appendonly yes
     volumes:
-      - nextbot_redis:/data
+      - evolution_redis:/data
     ports:
       - 6379:6379
 
 volumes:
-  nextbot_redis:
+  evolution_redis:
 
 
 networks:
-  nextbot-net:
-    name: nextbot-net
+  evolution-net:
+    name: evolution-net
     driver: bridge

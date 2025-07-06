@@ -4,12 +4,12 @@ import { Logger } from '@config/logger.config';
 import { EvolutionBot, IntegrationSession } from '@prisma/client';
 
 import { BaseChatbotController } from '../../base-chatbot.controller';
-import { NextBotDto } from '../dto/nextBot.dto';
-import { NextBotService } from '../services/nextBot.service';
+import { EvolutionBotDto } from '../dto/evolutionBot.dto';
+import { EvolutionBotService } from '../services/evolutionBot.service';
 
-export class NextBotController extends BaseChatbotController<EvolutionBot, NextBotDto> {
+export class EvolutionBotController extends BaseChatbotController<EvolutionBot, EvolutionBotDto> {
   constructor(
-    private readonly nextBotService: NextBotService,
+    private readonly evolutionBotService: EvolutionBotService,
     prismaRepository: PrismaRepository,
     waMonitor: WAMonitoringService,
   ) {
@@ -20,10 +20,10 @@ export class NextBotController extends BaseChatbotController<EvolutionBot, NextB
     this.sessionRepository = this.prismaRepository.integrationSession;
   }
 
-  public readonly logger = new Logger('NextBotController');
-  protected readonly integrationName = 'NextBot';
+  public readonly logger = new Logger('EvolutionBotController');
+  protected readonly integrationName = 'EvolutionBot';
 
-  integrationEnabled = true;
+  integrationEnabled = true; // Set to true by default or use config value if available
   botRepository: any;
   settingsRepository: any;
   sessionRepository: any;
@@ -40,10 +40,10 @@ export class NextBotController extends BaseChatbotController<EvolutionBot, NextB
   }
 
   protected getIntegrationType(): string {
-    return 'nextbot';
+    return 'evolution';
   }
 
-  protected getAdditionalBotData(data: NextBotDto): Record<string, any> {
+  protected getAdditionalBotData(data: EvolutionBotDto): Record<string, any> {
     return {
       apiUrl: data.apiUrl,
       apiKey: data.apiKey,
@@ -51,7 +51,7 @@ export class NextBotController extends BaseChatbotController<EvolutionBot, NextB
   }
 
   // Implementation for bot-specific updates
-  protected getAdditionalUpdateFields(data: NextBotDto): Record<string, any> {
+  protected getAdditionalUpdateFields(data: EvolutionBotDto): Record<string, any> {
     return {
       apiUrl: data.apiUrl,
       apiKey: data.apiKey,
@@ -59,7 +59,11 @@ export class NextBotController extends BaseChatbotController<EvolutionBot, NextB
   }
 
   // Implementation for bot-specific duplicate validation on update
-  protected async validateNoDuplicatesOnUpdate(botId: string, instanceId: string, data: NextBotDto): Promise<void> {
+  protected async validateNoDuplicatesOnUpdate(
+    botId: string,
+    instanceId: string,
+    data: EvolutionBotDto,
+  ): Promise<void> {
     const checkDuplicate = await this.botRepository.findFirst({
       where: {
         id: {
@@ -72,7 +76,7 @@ export class NextBotController extends BaseChatbotController<EvolutionBot, NextB
     });
 
     if (checkDuplicate) {
-      throw new Error('NextBot already exists');
+      throw new Error('Evolution Bot already exists');
     }
   }
 
@@ -87,6 +91,6 @@ export class NextBotController extends BaseChatbotController<EvolutionBot, NextB
     pushName?: string,
     msg?: any,
   ) {
-    await this.nextBotService.process(instance, remoteJid, bot, session, settings, content, pushName, msg);
+    await this.evolutionBotService.process(instance, remoteJid, bot, session, settings, content, pushName, msg);
   }
 }

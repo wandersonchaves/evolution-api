@@ -214,7 +214,15 @@ export class OpenaiService extends BaseChatbotService<OpenaiBot, OpenaiSetting> 
       // Handle different bot types
       if (openaiBot.botType === 'assistant') {
         this.logger.log('Processing with Assistant API');
-        message = await this.processAssistantMessage(instance, session, openaiBot, remoteJid, pushName, false, content);
+        message = await this.processAssistantMessage(
+          instance,
+          session,
+          openaiBot,
+          remoteJid,
+          pushName,
+          false, // Not fromMe
+          content,
+        );
       } else {
         this.logger.log('Processing with ChatCompletion API');
         message = await this.processChatCompletionMessage(instance, openaiBot, remoteJid, content);
@@ -352,7 +360,7 @@ export class OpenaiService extends BaseChatbotService<OpenaiBot, OpenaiSetting> 
       data: {
         status: 'opened',
         awaitUser: true,
-        sessionId: threadId,
+        sessionId: threadId, // Ensure thread ID is saved consistently
       },
     });
 
@@ -497,7 +505,7 @@ export class OpenaiService extends BaseChatbotService<OpenaiBot, OpenaiSetting> 
       const completions = await this.client.chat.completions.create({
         model: openaiBot.model,
         messages: messages,
-        max_tokens: openaiBot.maxTokens || 500,
+        max_tokens: openaiBot.maxTokens || 500, // Add default if maxTokens is missing
       });
 
       if (instance.integration === Integration.WHATSAPP_BAILEYS) {
@@ -555,8 +563,8 @@ export class OpenaiService extends BaseChatbotService<OpenaiBot, OpenaiSetting> 
   ) {
     let status = await this.client.beta.threads.runs.retrieve(threadId, runId);
 
-    let maxRetries = 60;
-    const checkInterval = 1000;
+    let maxRetries = 60; // 1 minute with 1s intervals
+    const checkInterval = 1000; // 1 second
 
     while (
       status.status !== 'completed' &&

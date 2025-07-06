@@ -232,8 +232,8 @@ export class ChatwootService {
         '123456',
         inboxId,
         false,
-        organization ? organization : 'NextBotAPI',
-        logo ? logo : 'https://nextbot-api.com/files/nextbot-api-favicon.png',
+        organization ? organization : 'EvolutionAPI',
+        logo ? logo : 'https://evolution-api.com/files/evolution-api-favicon.png',
       )) as any);
 
     if (!contact) {
@@ -553,7 +553,7 @@ export class ChatwootService {
     const remoteJid = isLid ? body.key.senderPn : body.key.remoteJid;
     const cacheKey = `${instance.instanceName}:createConversation-${remoteJid}`;
     const lockKey = `${instance.instanceName}:lock:createConversation-${remoteJid}`;
-    const maxWaitTime = 5000;
+    const maxWaitTime = 5000; // 5 secounds
 
     try {
       // Processa atualização de contatos já criados @lid
@@ -1239,10 +1239,10 @@ export class ChatwootService {
       // Chatwoot to Whatsapp
       const messageReceived = body.content
         ? body.content
-            .replaceAll(/(?<!\*)\*((?!\s)([^\n*]+?)(?<!\s))\*(?!\*)/g, '_$1_')
-            .replaceAll(/\*{2}((?!\s)([^\n*]+?)(?<!\s))\*{2}/g, '*$1*')
-            .replaceAll(/~{2}((?!\s)([^\n*]+?)(?<!\s))~{2}/g, '~$1~')
-            .replaceAll(/(?<!`)`((?!\s)([^`*]+?)(?<!\s))`(?!`)/g, '```$1```')
+            .replaceAll(/(?<!\*)\*((?!\s)([^\n*]+?)(?<!\s))\*(?!\*)/g, '_$1_') // Substitui * por _
+            .replaceAll(/\*{2}((?!\s)([^\n*]+?)(?<!\s))\*{2}/g, '*$1*') // Substitui ** por *
+            .replaceAll(/~{2}((?!\s)([^\n*]+?)(?<!\s))~{2}/g, '~$1~') // Substitui ~~ por ~
+            .replaceAll(/(?<!`)`((?!\s)([^`*]+?)(?<!\s))`(?!`)/g, '```$1```') // Substitui ` por ```
         : body.content;
 
       const senderName = body?.conversation?.messages[0]?.sender?.available_name || body?.sender?.name;
@@ -2106,7 +2106,7 @@ export class ChatwootService {
           const processedBuffer = await img.getBufferAsync(Jimp.MIME_PNG);
 
           const fileStream = new Readable();
-          fileStream._read = () => {};
+          fileStream._read = () => {}; // _read is required but you can noop it
           fileStream.push(processedBuffer);
           fileStream.push(null);
 

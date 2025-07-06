@@ -1,14 +1,14 @@
 import { RouterBroker } from '@api/abstract/abstract.router';
-import { nextbotController } from '@api/server.module';
+import { evolutionController } from '@api/server.module';
 import { ConfigService } from '@config/env.config';
 import { Router } from 'express';
 
-export class NextBotRouter extends RouterBroker {
+export class EvolutionRouter extends RouterBroker {
   constructor(readonly configService: ConfigService) {
     super();
-    this.router.post(this.routerPath('webhook/nextbot', false), async (req, res) => {
+    this.router.post(this.routerPath('webhook/evolution', false), async (req, res) => {
       const { body } = req;
-      const response = await nextbotController.receiveWebhook(body);
+      const response = await evolutionController.receiveWebhook(body);
 
       return res.status(200).json(response);
     });

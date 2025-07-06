@@ -365,12 +365,12 @@ export class ConfigService {
         ENABLED: process.env?.PROVIDER_ENABLED === 'true',
         HOST: process.env.PROVIDER_HOST,
         PORT: process.env?.PROVIDER_PORT || '5656',
-        PREFIX: process.env?.PROVIDER_PREFIX || 'nextbot',
+        PREFIX: process.env?.PROVIDER_PREFIX || 'evolution',
       },
       DATABASE: {
         CONNECTION: {
           URI: process.env.DATABASE_CONNECTION_URI || '',
-          CLIENT_NAME: process.env.DATABASE_CONNECTION_CLIENT_NAME || 'nextbot',
+          CLIENT_NAME: process.env.DATABASE_CONNECTION_CLIENT_NAME || 'evolution',
         },
         PROVIDER: process.env.DATABASE_PROVIDER || 'postgresql',
         SAVE_DATA: {
@@ -392,7 +392,7 @@ export class ConfigService {
         ENABLED: process.env?.RABBITMQ_ENABLED === 'true',
         GLOBAL_ENABLED: process.env?.RABBITMQ_GLOBAL_ENABLED === 'true',
         PREFIX_KEY: process.env?.RABBITMQ_PREFIX_KEY,
-        EXCHANGE_NAME: process.env?.RABBITMQ_EXCHANGE_NAME || 'nextbot_exchange',
+        EXCHANGE_NAME: process.env?.RABBITMQ_EXCHANGE_NAME || 'evolution_exchange',
         URI: process.env.RABBITMQ_URI || '',
         FRAME_MAX: Number.parseInt(process.env.RABBITMQ_FRAME_MAX) || 8192,
         EVENTS: {
@@ -430,7 +430,7 @@ export class ConfigService {
         ENABLED: process.env?.NATS_ENABLED === 'true',
         GLOBAL_ENABLED: process.env?.NATS_GLOBAL_ENABLED === 'true',
         PREFIX_KEY: process.env?.NATS_PREFIX_KEY,
-        EXCHANGE_NAME: process.env?.NATS_EXCHANGE_NAME || 'nextbot_exchange',
+        EXCHANGE_NAME: process.env?.NATS_EXCHANGE_NAME || 'evolution_exchange',
         URI: process.env.NATS_URI || '',
         EVENTS: {
           APPLICATION_STARTUP: process.env?.NATS_EVENTS_APPLICATION_STARTUP === 'true',
@@ -516,7 +516,7 @@ export class ConfigService {
         },
       },
       WA_BUSINESS: {
-        TOKEN_WEBHOOK: process.env.WA_BUSINESS_TOKEN_WEBHOOK || 'nextbot',
+        TOKEN_WEBHOOK: process.env.WA_BUSINESS_TOKEN_WEBHOOK || 'evolution',
         URL: process.env.WA_BUSINESS_URL || 'https://graph.facebook.com',
         VERSION: process.env.WA_BUSINESS_VERSION || 'v18.0',
         LANGUAGE: process.env.WA_BUSINESS_LANGUAGE || 'en',
@@ -588,7 +588,7 @@ export class ConfigService {
         },
       },
       CONFIG_SESSION_PHONE: {
-        CLIENT: process.env?.CONFIG_SESSION_PHONE_CLIENT || 'NextBot API',
+        CLIENT: process.env?.CONFIG_SESSION_PHONE_CLIENT || 'Evolution API',
         NAME: process.env?.CONFIG_SESSION_PHONE_NAME || 'Chrome',
         VERSION: process.env?.CONFIG_SESSION_PHONE_VERSION || null,
       },
@@ -635,7 +635,7 @@ export class ConfigService {
         REDIS: {
           ENABLED: process.env?.CACHE_REDIS_ENABLED === 'true',
           URI: process.env?.CACHE_REDIS_URI || '',
-          PREFIX_KEY: process.env?.CACHE_REDIS_PREFIX_KEY || 'nextbot-cache',
+          PREFIX_KEY: process.env?.CACHE_REDIS_PREFIX_KEY || 'evolution-cache',
           TTL: Number.parseInt(process.env?.CACHE_REDIS_TTL) || 604800,
           SAVE_INSTANCES: process.env?.CACHE_REDIS_SAVE_INSTANCES === 'true',
         },

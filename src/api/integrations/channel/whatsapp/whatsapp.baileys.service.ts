@@ -1359,7 +1359,7 @@ export class BaileysStartupService extends ChannelStartupService {
     'messages.update': async (args: WAMessageUpdate[], settings: any) => {
       this.logger.log(`Update messages ${JSON.stringify(args, undefined, 2)}`);
 
-      const readChatToUpdate: Record<string, true> = {};
+      const readChatToUpdate: Record<string, true> = {}; // {remoteJid: true}
 
       for await (const { key, update } of args) {
         if (settings?.groupsIgnore && key.remoteJid?.includes('@g.us')) {
@@ -1815,6 +1815,10 @@ export class BaileysStartupService extends ChannelStartupService {
     const jid = createJid(number);
 
     try {
+      // const call = await this.client.offerCall(jid, isVideo);
+      // setTimeout(() => this.client.terminateCall(call.id, call.to), callDuration * 1000);
+
+      // return call;
       return { id: '123', jid, isVideo, callDuration };
     } catch (error) {
       return error;
@@ -1829,6 +1833,7 @@ export class BaileysStartupService extends ChannelStartupService {
     quoted: any,
     messageId?: string,
     ephemeralExpiration?: number,
+    // participants?: GroupParticipant[],
   ) {
     sender = sender.toLowerCase();
 
@@ -1836,6 +1841,10 @@ export class BaileysStartupService extends ChannelStartupService {
 
     if (isJidGroup(sender)) {
       option.useCachedGroupMetadata = true;
+      // if (participants)
+      //   option.cachedGroupMetadata = async () => {
+      //     return { participants: participants as GroupParticipant[] };
+      //   };
     }
 
     if (ephemeralExpiration) option.ephemeralExpiration = ephemeralExpiration;
@@ -2036,6 +2045,7 @@ export class BaileysStartupService extends ChannelStartupService {
           const cache = this.configService.get<CacheConf>('CACHE');
           if (!cache.REDIS.ENABLED && !cache.LOCAL.ENABLED) group = await this.findGroup({ groupJid: sender }, 'inner');
           else group = await this.getGroupMetadataCache(sender);
+          // group = await this.findGroup({ groupJid: sender }, 'inner');
         } catch (error) {
           throw new NotFoundException('Group not found');
         }
@@ -2064,6 +2074,7 @@ export class BaileysStartupService extends ChannelStartupService {
           quoted,
           null,
           group?.ephemeralDuration,
+          // group?.participants,
         );
       } else {
         messageSent = await this.sendMessage(sender, message, mentions, linkPreview, quoted);
@@ -3727,7 +3738,7 @@ export class BaileysStartupService extends ChannelStartupService {
               data: {
                 message: oldMessage.message,
                 status: 'EDITED',
-                messageTimestamp: Math.floor(Date.now() / 1000),
+                messageTimestamp: Math.floor(Date.now() / 1000), // Convert to int32 by dividing by 1000 to get seconds
               },
             });
             const messageUpdate: any = {
@@ -4136,7 +4147,7 @@ export class BaileysStartupService extends ChannelStartupService {
     };
 
     if (!messageRaw.status && message.key.fromMe === false) {
-      messageRaw.status = status[3];
+      messageRaw.status = status[3]; // DELIVERED MESSAGE
     }
 
     if (messageRaw.message.extendedTextMessage) {

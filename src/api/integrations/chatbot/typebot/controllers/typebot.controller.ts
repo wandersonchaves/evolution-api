@@ -107,7 +107,7 @@ export class TypebotController extends BaseChatbotController<TypebotModel, Typeb
       settings.stopBotFromMe,
       settings.keepOpen,
       content,
-      {},
+      {}, // prefilledVariables (optional)
     );
   }
 
@@ -232,8 +232,8 @@ export class TypebotController extends BaseChatbotController<TypebotModel, Typeb
       await this.typebotService.processTypebot(
         this.waMonitor.waInstances[instanceData.name],
         remoteJid,
-        null,
-        null,
+        null, // msg
+        null, // session
         findBot,
         url,
         expire,

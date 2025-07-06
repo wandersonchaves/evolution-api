@@ -440,7 +440,7 @@ export class OpenaiController extends BaseChatbotController<OpenaiBot, OpenaiDto
       const creds = await this.credsRepository.findFirst({
         where: {
           id: openaiCredsId,
-          instanceId: instanceId,
+          instanceId: instanceId, // Ensure the credential belongs to this instance
         },
       });
 

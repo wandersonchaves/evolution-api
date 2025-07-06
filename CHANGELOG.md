@@ -59,7 +59,7 @@
 * Correction of webhook global
 * Fixed send audio with whatsapp cloud api
 * Refactor on fetch chats
-* Refactor on NextBot Channel
+* Refactor on Evolution Channel
 
 # 2.2.0 (2024-10-18 10:00)
 
@@ -81,7 +81,7 @@
 * Mark as read from me and groups
 * Fetch chats query
 * Ads messages in chatwoot
-* Add indexes to improve performance in NextBot
+* Add indexes to improve performance in Evolution
 * Add logical or permanent message deletion based on env config
 * Add support for fetching multiple instances by key
 * Update instance.controller.ts to filter by instanceName
@@ -135,11 +135,11 @@
 * Validate if cache exists before accessing it
 * Missing autoCreate chatwoot in instance create
 * Fixed bugs in the frontend, on the event screens
-* Fixed use chatwoot with nextbot channel
+* Fixed use chatwoot with evolution channel
 * Fix chatwoot reply quote with Cloud API
 * Use exchange name from .env on RabbitMQ
 * Fixed chatwoot screen
-* It is now possible to send images via the NextBot Channel
+* It is now possible to send images via the Evolution Channel
 * Removed "version" from docker-compose as it is obsolete (https://dev.to/ajeetraina/do-we-still-use-version-in-compose-3inp)
 * Fixed typebot ignoreJids being used only from default settings
 * Fixed Chatwoot inbox creation on save
@@ -154,10 +154,10 @@
 
 * Improved layout manager
 * Translation in manager: English, Portuguese, Spanish and French
-* NextBot Integration
+* Evolution Bot Integration
 * Option to disable chatwoot bot contact with CHATWOOT_BOT_CONTACT
 * Added flowise integration
-* Added nextbot channel on instance create
+* Added evolution channel on instance create
 * Change in license to Apache-2.0
 * Mark All in events
 
@@ -348,7 +348,7 @@
 * Reply with media message on Chatwoot
 * improvements in sending status and groups
 * Correction in response returns from buttons, lists and templates
-* NextBotAPI/Baileys implemented
+* EvolutionAPI/Baileys implemented
 
 ### Break changes
 
@@ -643,7 +643,7 @@
 
 * Chatwoot: v2.18.0 - v3.0.0
 * Typebot: v2.16.0
-* Manager NextBot API
+* Manager Evolution API
 
 # 1.4.8 (2023-07-27 10:27)
 

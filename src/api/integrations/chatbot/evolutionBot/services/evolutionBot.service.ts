@@ -10,7 +10,7 @@ import axios from 'axios';
 import { BaseChatbotService } from '../../base-chatbot.service';
 import { OpenaiService } from '../../openai/services/openai.service';
 
-export class NextBotService extends BaseChatbotService<EvolutionBot, EvolutionBotSetting> {
+export class EvolutionBotService extends BaseChatbotService<EvolutionBot, EvolutionBotSetting> {
   private openaiService: OpenaiService;
 
   constructor(
@@ -19,7 +19,7 @@ export class NextBotService extends BaseChatbotService<EvolutionBot, EvolutionBo
     configService: ConfigService,
     openaiService: OpenaiService,
   ) {
-    super(waMonitor, prismaRepository, 'NextBotService', configService);
+    super(waMonitor, prismaRepository, 'EvolutionBotService', configService);
     this.openaiService = openaiService;
   }
 
@@ -27,11 +27,11 @@ export class NextBotService extends BaseChatbotService<EvolutionBot, EvolutionBo
    * Get the bot type identifier
    */
   protected getBotType(): string {
-    return 'nextbot';
+    return 'evolution';
   }
 
   /**
-   * Send a message to the NextBot API
+   * Send a message to the Evolution Bot API
    */
   protected async sendMessageToBot(
     instance: any,
@@ -61,13 +61,13 @@ export class NextBotService extends BaseChatbotService<EvolutionBot, EvolutionBo
 
       if (this.isAudioMessage(content) && msg) {
         try {
-          this.logger.debug(`[NextBot] Downloading audio for Whisper transcription`);
+          this.logger.debug(`[EvolutionBot] Downloading audio for Whisper transcription`);
           const transcription = await this.openaiService.speechToText(msg, instance);
           if (transcription) {
             payload.query = `[audio] ${transcription}`;
           }
         } catch (err) {
-          this.logger.error(`[NextBot] Failed to transcribe audio: ${err}`);
+          this.logger.error(`[EvolutionBot] Failed to transcribe audio: ${err}`);
         }
       }
 
@@ -91,7 +91,7 @@ export class NextBotService extends BaseChatbotService<EvolutionBot, EvolutionBo
       const endpoint = bot.apiUrl;
 
       if (!endpoint) {
-        this.logger.error('No NextBot endpoint defined');
+        this.logger.error('No Evolution Bot endpoint defined');
         return;
       }
 

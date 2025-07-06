@@ -20,6 +20,6 @@ volumes:
 
 
 networks:
-  nextbot-net:
-    name: nextbot-net
+  evolution-net:
+    name: evolution-net
     driver: bridge

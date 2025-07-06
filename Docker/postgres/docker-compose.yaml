@@ -5,7 +5,7 @@ services:
     container_name: postgres
     image: postgres:15
     networks:
-      - nextbot-net
+      - evolution-net
     command: ["postgres", "-c", "max_connections=1000"]
     restart: always
     ports:
@@ -20,7 +20,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     networks:
-      - nextbot-net
+      - evolution-net
     environment:
       - PGADMIN_DEFAULT_EMAIL=EMAIL
       - PGADMIN_DEFAULT_PASSWORD=PASSWORD  
@@ -37,6 +37,6 @@ volumes:
 
 
 networks:
-  nextbot-net:
-    name: nextbot-net
+  evolution-net:
+    name: evolution-net
     driver: bridge

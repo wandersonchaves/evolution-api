@@ -29,7 +29,7 @@ export const sendTelemetry = async (route: string): Promise<void> => {
   const url =
     process.env.TELEMETRY_URL && process.env.TELEMETRY_URL !== ''
       ? process.env.TELEMETRY_URL
-      : 'https://log.nextbot-api.com/telemetry';
+      : 'https://log.evolution-api.com/telemetry';
 
   axios
     .post(url, telemetry)

@@ -8,7 +8,7 @@ import { ConfigService } from '@config/env.config';
 import { BadRequestException } from '@exceptions';
 import EventEmitter2 from 'eventemitter2';
 
-import { NextBotStartupService } from './nextbot/nextbot.channel.service';
+import { EvolutionStartupService } from './evolution/evolution.channel.service';
 import { BusinessStartupService } from './meta/whatsapp.business.service';
 import { BaileysStartupService } from './whatsapp/whatsapp.baileys.service';
 
@@ -69,7 +69,7 @@ export class ChannelController {
     }
 
     if (instanceData.integration === Integration.EVOLUTION) {
-      return new NextBotStartupService(
+      return new EvolutionStartupService(
         data.configService,
         data.eventEmitter,
         data.prismaRepository,

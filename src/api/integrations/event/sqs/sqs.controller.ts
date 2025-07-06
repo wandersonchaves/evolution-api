@@ -122,7 +122,7 @@ export class SqsController extends EventController implements EventControllerInt
 
           const params = {
             MessageBody: JSON.stringify(message),
-            MessageGroupId: 'nextbot',
+            MessageGroupId: 'evolution',
             MessageDeduplicationId: `${instanceName}_${eventFormatted}_${Date.now()}`,
             QueueUrl: sqsUrl,
           };

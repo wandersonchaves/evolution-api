@@ -324,7 +324,7 @@ export abstract class BaseChatbotController<BotType = any, BotData extends BaseC
         ignoreJids: data.ignoreJids,
         splitMessages: data.splitMessages,
         timePerChar: data.timePerChar,
-        [fallbackFieldName]: data.fallbackId,
+        [fallbackFieldName]: data.fallbackId, // Use the correct field name dynamically
       };
 
       if (existingSettings) {
@@ -789,6 +789,9 @@ export abstract class BaseChatbotController<BotType = any, BotData extends BaseC
       const session = await this.getSession(remoteJid, instance);
 
       const content = getConversationMessage(msg);
+
+      // Get integration type
+      // const integrationType = this.getIntegrationType();
 
       // Find a bot for this message
       let findBot: any = await this.findBotTrigger(this.botRepository, content, instance, session);

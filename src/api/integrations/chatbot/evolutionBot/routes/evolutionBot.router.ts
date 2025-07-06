@@ -2,28 +2,28 @@ import { RouterBroker } from '@api/abstract/abstract.router';
 import { IgnoreJidDto } from '@api/dto/chatbot.dto';
 import { InstanceDto } from '@api/dto/instance.dto';
 import { HttpStatus } from '@api/routes/index.router';
-import { nextBotController } from '@api/server.module';
+import { evolutionBotController } from '@api/server.module';
 import { instanceSchema } from '@validate/instance.schema';
 import { RequestHandler, Router } from 'express';
 
-import { NextBotDto, NextBotSettingDto } from '../dto/nextBot.dto';
+import { EvolutionBotDto, EvolutionBotSettingDto } from '../dto/evolutionBot.dto';
 import {
-  nextBotIgnoreJidSchema,
-  nextBotSchema,
-  nextBotSettingSchema,
-  nextBotStatusSchema,
-} from '../validate/nextBot.schema';
+  evolutionBotIgnoreJidSchema,
+  evolutionBotSchema,
+  evolutionBotSettingSchema,
+  evolutionBotStatusSchema,
+} from '../validate/evolutionBot.schema';
 
-export class NextBotRouter extends RouterBroker {
+export class EvolutionBotRouter extends RouterBroker {
   constructor(...guards: RequestHandler[]) {
     super();
     this.router
       .post(this.routerPath('create'), ...guards, async (req, res) => {
-        const response = await this.dataValidate<NextBotDto>({
+        const response = await this.dataValidate<EvolutionBotDto>({
           request: req,
-          schema: nextBotSchema,
-          ClassRef: NextBotDto,
-          execute: (instance, data) => nextBotController.createBot(instance, data),
+          schema: evolutionBotSchema,
+          ClassRef: EvolutionBotDto,
+          execute: (instance, data) => evolutionBotController.createBot(instance, data),
         });
 
         res.status(HttpStatus.CREATED).json(response);
@@ -33,47 +33,47 @@ export class NextBotRouter extends RouterBroker {
           request: req,
           schema: instanceSchema,
           ClassRef: InstanceDto,
-          execute: (instance) => nextBotController.findBot(instance),
+          execute: (instance) => evolutionBotController.findBot(instance),
         });
 
         res.status(HttpStatus.OK).json(response);
       })
-      .get(this.routerPath('fetch/:nextBotId'), ...guards, async (req, res) => {
+      .get(this.routerPath('fetch/:evolutionBotId'), ...guards, async (req, res) => {
         const response = await this.dataValidate<InstanceDto>({
           request: req,
           schema: instanceSchema,
           ClassRef: InstanceDto,
-          execute: (instance) => nextBotController.fetchBot(instance, req.params.nextBotId),
+          execute: (instance) => evolutionBotController.fetchBot(instance, req.params.evolutionBotId),
         });
 
         res.status(HttpStatus.OK).json(response);
       })
-      .put(this.routerPath('update/:nextBotId'), ...guards, async (req, res) => {
-        const response = await this.dataValidate<NextBotDto>({
+      .put(this.routerPath('update/:evolutionBotId'), ...guards, async (req, res) => {
+        const response = await this.dataValidate<EvolutionBotDto>({
           request: req,
-          schema: nextBotSchema,
-          ClassRef: NextBotDto,
-          execute: (instance, data) => nextBotController.updateBot(instance, req.params.nextBotId, data),
+          schema: evolutionBotSchema,
+          ClassRef: EvolutionBotDto,
+          execute: (instance, data) => evolutionBotController.updateBot(instance, req.params.evolutionBotId, data),
         });
 
         res.status(HttpStatus.OK).json(response);
       })
-      .delete(this.routerPath('delete/:nextBotId'), ...guards, async (req, res) => {
+      .delete(this.routerPath('delete/:evolutionBotId'), ...guards, async (req, res) => {
         const response = await this.dataValidate<InstanceDto>({
           request: req,
           schema: instanceSchema,
           ClassRef: InstanceDto,
-          execute: (instance) => nextBotController.deleteBot(instance, req.params.nextBotId),
+          execute: (instance) => evolutionBotController.deleteBot(instance, req.params.evolutionBotId),
         });
 
         res.status(HttpStatus.OK).json(response);
       })
       .post(this.routerPath('settings'), ...guards, async (req, res) => {
-        const response = await this.dataValidate<NextBotSettingDto>({
+        const response = await this.dataValidate<EvolutionBotSettingDto>({
           request: req,
-          schema: nextBotSettingSchema,
-          ClassRef: NextBotSettingDto,
-          execute: (instance, data) => nextBotController.settings(instance, data),
+          schema: evolutionBotSettingSchema,
+          ClassRef: EvolutionBotSettingDto,
+          execute: (instance, data) => evolutionBotController.settings(instance, data),
         });
 
         res.status(HttpStatus.OK).json(response);
@@ -83,7 +83,7 @@ export class NextBotRouter extends RouterBroker {
           request: req,
           schema: instanceSchema,
           ClassRef: InstanceDto,
-          execute: (instance) => nextBotController.fetchSettings(instance),
+          execute: (instance) => evolutionBotController.fetchSettings(instance),
         });
 
         res.status(HttpStatus.OK).json(response);
@@ -91,19 +91,19 @@ export class NextBotRouter extends RouterBroker {
       .post(this.routerPath('changeStatus'), ...guards, async (req, res) => {
         const response = await this.dataValidate<InstanceDto>({
           request: req,
-          schema: nextBotStatusSchema,
+          schema: evolutionBotStatusSchema,
           ClassRef: InstanceDto,
-          execute: (instance, data) => nextBotController.changeStatus(instance, data),
+          execute: (instance, data) => evolutionBotController.changeStatus(instance, data),
         });
 
         res.status(HttpStatus.OK).json(response);
       })
-      .get(this.routerPath('fetchSessions/:nextBotId'), ...guards, async (req, res) => {
+      .get(this.routerPath('fetchSessions/:evolutionBotId'), ...guards, async (req, res) => {
         const response = await this.dataValidate<InstanceDto>({
           request: req,
           schema: instanceSchema,
           ClassRef: InstanceDto,
-          execute: (instance) => nextBotController.fetchSessions(instance, req.params.nextBotId),
+          execute: (instance) => evolutionBotController.fetchSessions(instance, req.params.evolutionBotId),
         });
 
         res.status(HttpStatus.OK).json(response);
@@ -111,9 +111,9 @@ export class NextBotRouter extends RouterBroker {
       .post(this.routerPath('ignoreJid'), ...guards, async (req, res) => {
         const response = await this.dataValidate<IgnoreJidDto>({
           request: req,
-          schema: nextBotIgnoreJidSchema,
+          schema: evolutionBotIgnoreJidSchema,
           ClassRef: IgnoreJidDto,
-          execute: (instance, data) => nextBotController.ignoreJid(instance, data),
+          execute: (instance, data) => evolutionBotController.ignoreJid(instance, data),
         });
 
         res.status(HttpStatus.OK).json(response);

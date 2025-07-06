@@ -4,8 +4,8 @@ import { Logger } from '@config/logger.config';
 
 import { ChannelController, ChannelControllerInterface } from '../channel.controller';
 
-export class NextBotController extends ChannelController implements ChannelControllerInterface {
-  private readonly logger = new Logger('NextBotController');
+export class EvolutionController extends ChannelController implements ChannelControllerInterface {
+  private readonly logger = new Logger('EvolutionController');
 
   constructor(prismaRepository: PrismaRepository, waMonitor: WAMonitoringService) {
     super(prismaRepository, waMonitor);
@@ -17,7 +17,7 @@ export class NextBotController extends ChannelController implements ChannelContr
     const numberId = data.numberId;
 
     if (!numberId) {
-      this.logger.error('WebhookService -> receiveWebhookNextBot -> numberId not found');
+      this.logger.error('WebhookService -> receiveWebhookEvolution -> numberId not found');
       return;
     }
 

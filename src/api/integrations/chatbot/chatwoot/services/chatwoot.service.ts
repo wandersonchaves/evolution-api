@@ -26,7 +26,6 @@ import axios from 'axios';
 import { proto } from 'baileys';
 import dayjs from 'dayjs';
 import FormData from 'form-data';
-import Jimp from 'jimp';
 import Long from 'long';
 import mimeTypes from 'mime-types';
 import path from 'path';
@@ -2099,6 +2098,9 @@ export class ChatwootService {
           const random = Math.random().toString(36).substring(7);
           const nameFile = `${random}.${mimeTypes.extension(mimeType)}`;
           const fileData = Buffer.from(imgBuffer.data, 'binary');
+
+          const jimpModule = await import('jimp');
+          const Jimp = (jimpModule.default || jimpModule) as any; // 👈 força o tipo para evitar os erros de TS
 
           const img = await Jimp.read(fileData);
           await img.cover(320, 180);

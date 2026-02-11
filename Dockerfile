@@ -1,24 +1,19 @@
-# Etapa de build
-FROM node:20-slim AS builder
+FROM node:24-alpine AS builder
 
-# Instala dependências do sistema
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    bash \
-    curl \
-    wget \
-    git \
-    tzdata \
-    ffmpeg \
-    ca-certificates \
-    dos2unix \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update && \
+    apk add --no-cache git ffmpeg wget curl bash openssl
+
+LABEL version="2.3.1" description="Api to control whatsapp features through http requests." 
+LABEL maintainer="Davidson Gomes" git="https://github.com/DavidsonGomes"
+LABEL contact="contato@evolution-api.com"
 
 WORKDIR /evolution
 
-COPY ./package.json ./package-lock.json ./tsconfig.json ./
+COPY ./package*.json ./
+COPY ./tsconfig.json ./
+COPY ./tsup.config.ts ./
 
-RUN npm ci
+RUN npm ci --silent
 
 COPY ./src ./src
 COPY ./public ./public
@@ -26,7 +21,7 @@ COPY ./prisma ./prisma
 COPY ./manager ./manager
 COPY ./.env.example ./.env
 COPY ./runWithProvider.js ./
-COPY ./tsup.config.ts ./
+
 COPY ./Docker ./Docker
 
 RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
@@ -35,8 +30,7 @@ RUN ./Docker/scripts/generate_database.sh
 
 RUN npm run build
 
-# Etapa final
-FROM node:20-slim AS final
+FROM node:24-alpine AS final
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -47,6 +41,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 ENV TZ=America/Sao_Paulo
+ENV DOCKER_ENV=true
 
 WORKDIR /evolution
 
@@ -66,4 +61,4 @@ ENV DOCKER_ENV=true
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/bash", "-c", ". ./Docker/scripts/deploy_database.sh && npm run start:prod"]
+ENTRYPOINT ["/bin/bash", "-c", ". ./Docker/scripts/deploy_database.sh && npm run start:prod" ]

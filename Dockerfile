@@ -1,9 +1,11 @@
 FROM node:24-alpine AS builder
 
 RUN apk update && \
-    apk add --no-cache git ffmpeg wget curl bash openssl
+    apk add --no-cache \
+      git ffmpeg wget curl bash openssl ca-certificates dos2unix \
+      python3 make g++
 
-LABEL version="2.3.1" description="Api to control whatsapp features through http requests." 
+LABEL version="2.3.1" description="Api to control whatsapp features through http requests."
 LABEL maintainer="Davidson Gomes" git="https://github.com/DavidsonGomes"
 LABEL contact="contato@evolution-api.com"
 
@@ -13,7 +15,7 @@ COPY ./package*.json ./
 COPY ./tsconfig.json ./
 COPY ./tsup.config.ts ./
 
-RUN npm ci --silent
+RUN node -v && npm -v && npm ci
 
 COPY ./src ./src
 COPY ./public ./public
@@ -21,24 +23,21 @@ COPY ./prisma ./prisma
 COPY ./manager ./manager
 COPY ./.env.example ./.env
 COPY ./runWithProvider.js ./
-
 COPY ./Docker ./Docker
 
 RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
 
-RUN ./Docker/scripts/generate_database.sh
-
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:24-alpine AS final
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    bash \
-    tzdata \
-    ffmpeg \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+  bash \
+  tzdata \
+  ffmpeg \
+  ca-certificates \
+  openssl
 
 ENV TZ=America/Sao_Paulo
 ENV DOCKER_ENV=true
@@ -57,8 +56,6 @@ COPY --from=builder /evolution/Docker ./Docker
 COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
 COPY --from=builder /evolution/tsup.config.ts ./tsup.config.ts
 
-ENV DOCKER_ENV=true
-
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/bash", "-c", ". ./Docker/scripts/deploy_database.sh && npm run start:prod" ]
+ENTRYPOINT ["/bin/bash", "-lc", ". ./Docker/scripts/deploy_database.sh && npm run start:prod" ]

@@ -26,7 +26,7 @@ import axios from 'axios';
 import { WAMessageContent, WAMessageKey } from 'baileys';
 import dayjs from 'dayjs';
 import FormData from 'form-data';
-import { Jimp, JimpMime } from 'jimp';
+import { JimpMime } from 'jimp';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import Long from 'long';
 import mimeTypes from 'mime-types';

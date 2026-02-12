@@ -1,31 +1,26 @@
 const dotenv = require('dotenv');
 const { execSync } = require('child_process');
-const { existsSync } = require('fs');
-const path = require('path');
+const { existsSync, rmSync } = require('fs');
 
 dotenv.config();
 
-const databaseProvider = process.env.DATABASE_PROVIDER ?? 'postgresql';
+// provider definido por env ou default
+const databaseProvider = process.env.DATABASE_PROVIDER || 'postgresql';
 
+// caminhos de schema/migrations
 const schemaPath = `prisma/${databaseProvider}/${databaseProvider}-schema.prisma`;
 const migrationsPath = `prisma/${databaseProvider}/migrations`;
 
-if (!DATABASE_PROVIDER) {
-  console.warn(`DATABASE_PROVIDER is not set in the .env file, using default: ${databaseProviderDefault}`);
+if (!process.env.DATABASE_PROVIDER) {
+  console.warn(`[WARN] DATABASE_PROVIDER not set. Using default: ${databaseProvider}`);
 }
 
-// Função para determinar qual pasta de migrations usar
-// Função para determinar qual pasta de migrations usar
+// psql_bouncer usa as migrations do postgresql
 function getMigrationsFolder(provider) {
-  switch (provider) {
-    case 'psql_bouncer':
-      return 'postgresql-migrations'; // psql_bouncer usa as migrations do postgresql
-    default:
-      return `${provider}-migrations`;
-  }
+  return provider === 'psql_bouncer' ? 'postgresql-migrations' : `${provider}-migrations`;
 }
 
-const migrationsFolder = getMigrationsFolder(databaseProviderDefault);
+const migrationsFolder = getMigrationsFolder(databaseProvider);
 
 let command = process.argv
   .slice(2)
@@ -34,23 +29,20 @@ let command = process.argv
   .replace(/SCHEMA_PATH/g, schemaPath)
   .replace(/MIGRATIONS_PATH/g, migrationsPath);
 
-// Substituir referências à pasta de migrations pela pasta correta
-const migrationsPattern = new RegExp(`${databaseProviderDefault}-migrations`, 'g');
-command = command.replace(migrationsPattern, migrationsFolder);
+// troca a pasta de migrations padrão pela correta
+command = command.replace(new RegExp(`${databaseProvider}-migrations`, 'g'), migrationsFolder);
 
-if (command.includes('rmdir') && existsSync('prisma\\migrations')) {
-  try {
-    execSync('rmdir /S /Q prisma\\migrations', { stdio: 'inherit' });
-  } catch (error) {
-    console.error(`Error removing directory: prisma\\migrations`);
-    process.exit(1);
+// remoção cross-platform (Linux/Windows) - evita rmdir do windows
+if (command.includes('rmdir') || command.includes('rm -rf')) {
+  if (existsSync('prisma/migrations')) {
+    rmSync('prisma/migrations', { recursive: true, force: true });
   }
-} else if (command.includes('rmdir')) {
-  console.warn(`Directory 'prisma\\migrations' does not exist, skipping removal.`);
+  // remove do command qualquer tentativa de rmdir específica
+  command = command.replace(/rmdir\s+\/S\s+\/Q\s+prisma\\migrations/g, '');
 }
 
 try {
-  execSync(command, { stdio: 'inherit' });
+  execSync(command.trim(), { stdio: 'inherit' });
 } catch (error) {
   console.error(`❌ Error executing command: ${command}`);
   process.exit(1);

@@ -47,3 +47,4 @@ lerna-debug.log*
 
 /prisma/postgresql/migrations/*
 /prisma/mysql/migrations/*
+.trunk/
